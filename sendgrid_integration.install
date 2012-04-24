@@ -1,0 +1,9 @@
+<?php
+
+function sendgrid_integration_enable() {
+  variable_set('mail_system', array('default-system' => 'SendGridMailSystem'));
+}
+
+function smtp_disable() {
+  variable_set('mail_system', array('default-system' => 'DefaultMailSystem'));
+}

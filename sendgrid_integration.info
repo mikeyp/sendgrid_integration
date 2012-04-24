@@ -1,0 +1,8 @@
+name = SendGrid Integration
+description = Provides sendgrid support
+
+core = 7.x
+package = Mail
+
+files[] = sendgrid_integration.module
+files[] = sendgrid.mail.inc
