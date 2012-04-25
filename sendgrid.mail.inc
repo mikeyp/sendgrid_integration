@@ -27,42 +27,43 @@ class SendGridMailSystem implements MailSystemInterface {
 
     // SMTP API, we use these to identify messages.
     $smtp_api = array(
-    	'category' => variable_get('site_name', 'Drupal'), 
-    	'unique_args' => array(
-    		'id' => $message['id'], 
-    		'uid' => $message['params']['account']->uid, 
-    		'module' => $message['module'], 
+			'category' => variable_get('site_name', 'Drupal'),
+      'unique_args' => array(
+        'id' => $message['id'],
+        'uid' => $message['params']['account']->uid,
+        'module' => $message['module'],
 			), 
 		);
 
     // Data sended to sendgrid.
     $data = array(
-    	'api_user' => $user, 
-    	'api_key' => $key, 
-    	'x-smtpapi' => json_encode($smtp_api), 
-    	'to' => $message['to'], 
-    	'subject' => $message['subject'], 
-    	'from' => variable_get('site_mail'), 
-    	'fromname' => variable_get('site_name', 'Drupal'), 
-			);
+      'api_user' => $user,
+      'api_key' => $key,
+      'x-smtpapi' => json_encode($smtp_api),
+      'to' => $message['to'],
+      'subject' => $message['subject'],
+      'from' => variable_get('site_mail'),
+      'fromname' => variable_get('site_name', 'Drupal'),
+    );
 
     // Check Content-Type of message body
     if (strpos($message['headers']['Content-Type'], 'text/plain') !== FALSE) {
       // Message body is text/plain.
       $data['text'] = drupal_wrap_mail(drupal_html_to_text($message['body']));
-    } else {
+    } 
+    else {
       $data['html'] = $message['body'];
     }
 
     // Options for drupal_http_request.
     $options = array(
-    	'method' => 'POST', 
-    	'data' => http_build_query($data), 
-    	'timeout' => 30, 
-    	'headers' => array(
-    		'Content-Type' => 'application/x-www-form-urlencoded',
-    		 ), 
-			);
+      'method' => 'POST',
+      'data' => http_build_query($data),
+      'timeout' => 30,
+      'headers' => array(
+    	  'Content-Type' => 'application/x-www-form-urlencoded',
+    	),
+    );
 
     $result = drupal_http_request($server, $options);
 
@@ -83,10 +84,10 @@ class SendGridMailSystem implements MailSystemInterface {
     }
 
     $variables = array(
-    	'%code' => $result->code, 
-    	'%msg' => $result->error, 
-    	'%errors' => $errors, 
-		);
+      '%code' => $result->code, 
+      '%msg' => $result->error, 
+      '%errors' => $errors, 
+    );
     watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_NOTICE, $link = NULL);
 
     return FALSE;
