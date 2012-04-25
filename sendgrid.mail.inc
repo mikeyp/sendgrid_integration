@@ -1,6 +1,6 @@
 <?php
 /**
- * @file sendgrid.mail.inc
+ * @file
  * Implements Drupal MailSystemInterface
  */
 

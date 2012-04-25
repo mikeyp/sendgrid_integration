@@ -1,6 +1,6 @@
 <?php
 /**
- * @file sendgrid_integratin.install
+ * @file
  * Main module file for SendGrid Integration.
  *
  * Provides module configuration and help functionality.

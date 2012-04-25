@@ -1,6 +1,6 @@
 <?php
 /**
- * @file sendgrid.install
+ * @file
  * Contains install and update functions for SendGrid Integration
  */
 
