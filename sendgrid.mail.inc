@@ -16,37 +16,44 @@ class SendGridMailSystem implements MailSystemInterface {
 	public function mail(array $message) {
 		
 		//SendGrid authentication information
-		$server = 'http://sendgrid.com/api/mail.send.json';
+		$server = 'https://sendgrid.com/api/mail.send.json';
 		$user = '';
 		$key = '';
 		
-		$json_string = array (
-			'to' => $message['to'],
+		$smtp_api = array (
 			'category' => variable_get('site_name', 'Drupal'),
 			'unique_args' => array(
 				'id' => $message['id'],
+				'uid' => $message['params']['account']->uid,
+				'module' => $message['module'],
 			),
 		);
+		
+		watchdog('sendgrid_integration', 'message: %code', array('%code' => print_r($message, TRUE)), WATCHDOG_NOTICE, $link = NULL);
 		
 
 		$data = array(
 			'api_user' => $user,
 			'api_key' => $key,
-			'x-smtpapi' => json_encode($json_string),
+			'x-smtpapi' => json_encode($smtp_api),
 			'to' => $message['to'],
 			'subject' => $message['subject'],
-			'html' => $message['body'],
-			'text' => drupal_html_to_text($message['body']),
+			'html' => $message['body'][0],
+			'text' => drupal_html_to_text($message['body'][0]),
 			'from' => variable_get('site_mail'),
+			'fromname' => variable_get('site_name', 'Drupal'),
 		);
+		
 		
 		watchdog('sendgrid_integration', 'data: %code', array('%code' => drupal_http_build_query($data, $parent = '')), WATCHDOG_NOTICE, $link = NULL);
 				
     $options = array(
     	'method' => 'POST',
-    	'data' => drupal_http_build_query($data),
+    	'data' => http_build_query($data),
     	'timeout' => 30,
-    	'headers' => array('Content-Type' => 'application/x-www-form-urlencoded'),
+    	'headers' => array(
+    		'Content-Type' => 'application/x-www-form-urlencoded',
+    	),
 		);
 		
 		$result = drupal_http_request($server, $options);
