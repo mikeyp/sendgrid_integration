@@ -1,7 +1,11 @@
 <?php
+/**
+ * @file sendgrid.mail.inc
+ * Implements Drupal MailSystemInterface
+ */
 
 class SendGridMailSystem implements MailSystemInterface {
-		
+	
 	/**
 	 * Email formatting, example strip away html
 	 */
@@ -9,8 +13,6 @@ class SendGridMailSystem implements MailSystemInterface {
 		// Join message array
 		$message['body'] = implode("\n\n", $message['body']);
 		
-		
-	
 		return $message;
 	}
 	
@@ -18,14 +20,13 @@ class SendGridMailSystem implements MailSystemInterface {
 	 * Send email message
 	 */
 	public function mail(array $message) {
-		
-		//SendGrid authentication information
+		// SendGrid authentication information
 		$server = 'https://sendgrid.com/api/mail.send.json';
 		$user = variable_get('sendgrid_integration_username', '');
 		$key = variable_get('sendgrid_integration_apikey', '');
 
 		
-		//SMTP API, we use these to identify messages
+		// SMTP API, we use these to identify messages
 		$smtp_api = array (
 			'category' => variable_get('site_name', 'Drupal'),
 			'unique_args' => array(
@@ -35,7 +36,7 @@ class SendGridMailSystem implements MailSystemInterface {
 			),
 		);
 		
-		//Data sended to sendgrid
+		// Data sended to sendgrid
 		$data = array(
 			'api_user' => $user,
 			'api_key' => $key,
@@ -55,13 +56,13 @@ class SendGridMailSystem implements MailSystemInterface {
 		}
 			
 		// Options for drupal_http_request		
-    $options = array(
-    	'method' => 'POST',
-    	'data' => http_build_query($data),
-    	'timeout' => 30,
-    	'headers' => array(
-    		'Content-Type' => 'application/x-www-form-urlencoded',
-    	),
+		$options = array(
+			'method' => 'POST',
+			'data' => http_build_query($data),
+			'timeout' => 30,
+			'headers' => array(
+				'Content-Type' => 'application/x-www-form-urlencoded',
+			),
 		);
 		
 		$result = drupal_http_request($server, $options);
