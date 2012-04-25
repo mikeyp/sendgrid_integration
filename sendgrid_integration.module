@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Implements hook_menu()
+ */
 function sendgrid_integration_menu() {
 	$items = array();
 	
@@ -22,6 +25,9 @@ function sendgrid_integration_permissions() {
 	);
 }
 
+/**
+ * Provides Settings Form
+ */
 function sendgrid_integration_admin() {
 	$form = array();
 	
@@ -47,4 +53,17 @@ function sendgrid_integration_admin() {
 	);
 	
 	return system_settings_form($form);
+}
+
+/**
+ * Implements hook_help()
+ */
+function sendgrid_integration_help($path, $arg) {
+	$output = '';
+	switch($path) {
+		case 'admin/help#sendgrid_integration':			
+			$output .= '<h3>' . t('SendGrid Integration') . '</h3>';
+			$output .= '<p>'. t('Module provides own implementation of MailSystemIntegration, replacing the default implementation and uses SendGrid Web API instead.') . '</p>';
+	}
+	return $output;
 }
