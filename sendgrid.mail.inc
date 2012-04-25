@@ -6,9 +6,11 @@ class SendGridMailSystem implements MailSystemInterface {
 	 * Email formatting, example strip away html
 	 */
 	public function format(array $message) {
-		
+		// Join message array
 		$message['body'] = implode("\n\n", $message['body']);
 		
+		
+	
 		return $message;
 	}
 	
@@ -19,8 +21,9 @@ class SendGridMailSystem implements MailSystemInterface {
 		
 		//SendGrid authentication information
 		$server = 'https://sendgrid.com/api/mail.send.json';
-		$user = '';
-		$key = '';
+		$user = variable_get('sendgrid_integration_username', '');
+		$key = variable_get('sendgrid_integration_apikey', '');
+
 		
 		//SMTP API, we use these to identify messages
 		$smtp_api = array (
@@ -39,13 +42,19 @@ class SendGridMailSystem implements MailSystemInterface {
 			'x-smtpapi' => json_encode($smtp_api),
 			'to' => $message['to'],
 			'subject' => $message['subject'],
-			'html' => $message['body'][0],
-			'text' => drupal_html_to_text($message['body'][0]),
 			'from' => variable_get('site_mail'),
 			'fromname' => variable_get('site_name', 'Drupal'),
 		);
+		
+		// Check Content-Type of message body
+		if(strpos($message['headers']['Content-Type'], 'text/plain') !== FALSE) {
+			// Message body is text/plain
+			$data['text'] = drupal_wrap_mail(drupal_html_to_text($message['body']));
+		} else {
+			$data['html'] = $message['body'];
+		}
 			
-		//Options for drupal_http_request		
+		// Options for drupal_http_request		
     $options = array(
     	'method' => 'POST',
     	'data' => http_build_query($data),

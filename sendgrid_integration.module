@@ -1,3 +1,50 @@
 <?php
 
+function sendgrid_integration_menu() {
+	$items = array();
+	
+	$items['admin/config/system/sendgrid'] = array(
+    'title' => t('SendGrid settings'),
+    'description' => t('SendGrid Integration settings'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sendgrid_integration_admin'),
+    'access callback' => 'user_access',
+    'access arguments' => array('Administer SendGrid settings'),
+   );
 
+  return $items;
+}
+
+function sendgrid_integration_permissions() {
+	return array(
+		'title' => t('Administer SendGrid settings'),
+		'description' => t('Configure SendGrid options like username and password'),
+	);
+}
+
+function sendgrid_integration_admin() {
+	$form = array();
+	
+	$form['authentication'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Authentication'),
+	);
+	
+	$form['authentication']['sendgrid_integration_username'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Username'),
+		'#description' => t('Your SendGrid Username'),
+		'#required' => TRUE,
+		'#default_value' => variable_get('sendgrid_integration_username', ''),
+	);	
+	
+	$form['authentication']['sendgrid_integration_apikey'] = array(
+		'#type' => 'password',
+		'#title' => t('API Key'),
+		'#description' => t('Your SendGrid Password'),
+		'#required' => TRUE,
+		'#default_value' => variable_get('sendgrid_integration_apikey', ''),
+	);
+	
+	return system_settings_form($form);
+}
