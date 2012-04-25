@@ -1,9 +1,19 @@
 <?php
+/**
+ * @file sendgrid.install
+ * Contains install and update functions for SendGrid Integration
+ */
 
+/**
+ * Implemenets hook_enable().
+ */
 function sendgrid_integration_enable() {
   variable_set('mail_system', array('default-system' => 'SendGridMailSystem'));
 }
 
+/**
+ * Implements hook_disable().
+ */
 function sendgrid_integration_disable() {
   variable_set('mail_system', array('default-system' => 'DefaultMailSystem'));
 }
