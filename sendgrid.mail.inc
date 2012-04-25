@@ -27,13 +27,13 @@ class SendGridMailSystem implements MailSystemInterface {
 
     // SMTP API, we use these to identify messages.
     $smtp_api = array(
-			'category' => variable_get('site_name', 'Drupal'),
+      'category' => variable_get('site_name', 'Drupal'),
       'unique_args' => array(
         'id' => $message['id'],
         'uid' => $message['params']['account']->uid,
         'module' => $message['module'],
-			), 
-		);
+      ),
+    );
 
     // Data sended to sendgrid.
     $data = array(
@@ -46,11 +46,11 @@ class SendGridMailSystem implements MailSystemInterface {
       'fromname' => variable_get('site_name', 'Drupal'),
     );
 
-    // Check Content-Type of message body
+    // Check Content-Type of message body.
     if (strpos($message['headers']['Content-Type'], 'text/plain') !== FALSE) {
       // Message body is text/plain.
       $data['text'] = drupal_wrap_mail(drupal_html_to_text($message['body']));
-    } 
+    }
     else {
       $data['html'] = $message['body'];
     }
@@ -61,22 +61,22 @@ class SendGridMailSystem implements MailSystemInterface {
       'data' => http_build_query($data),
       'timeout' => 30,
       'headers' => array(
-    	  'Content-Type' => 'application/x-www-form-urlencoded',
-    	),
+        'Content-Type' => 'application/x-www-form-urlencoded',
+      ),
     );
 
     $result = drupal_http_request($server, $options);
 
     $result_data = json_decode($result->data);
     // Creating hook, allowing other modules react on sent email.
-    module_invoke_all('sendgrid_integration_sent', $message['to'], $result -> code, $smtp_api['unique_args'], $result_data);
+    module_invoke_all('sendgrid_integration_sent', $message['to'], $result->code, $smtp_api['unique_args'], $result_data);
 
-    //Check if sending message succeeded.
+    // Check if sending message succeeded.
     if ($result->code == 200) {
       return TRUE;
     }
+		
     // Default response to message sending failed.
-
     // Create log entry.
     $errors = '';
     foreach ($result_data->errors as $error) {
@@ -84,9 +84,9 @@ class SendGridMailSystem implements MailSystemInterface {
     }
 
     $variables = array(
-      '%code' => $result->code, 
-      '%msg' => $result->error, 
-      '%errors' => $errors, 
+      '%code' => $result->code,
+      '%msg' => $result->error,
+      '%errors' => $errors,
     );
     watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_NOTICE, $link = NULL);
 
