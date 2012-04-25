@@ -20,6 +20,7 @@ class SendGridMailSystem implements MailSystemInterface {
 		$user = '';
 		$key = '';
 		
+		//SMTP API, we use these to identify messages
 		$smtp_api = array (
 			'category' => variable_get('site_name', 'Drupal'),
 			'unique_args' => array(
@@ -29,9 +30,7 @@ class SendGridMailSystem implements MailSystemInterface {
 			),
 		);
 		
-		watchdog('sendgrid_integration', 'message: %code', array('%code' => print_r($message, TRUE)), WATCHDOG_NOTICE, $link = NULL);
-		
-
+		//Data sended to sendgrid
 		$data = array(
 			'api_user' => $user,
 			'api_key' => $key,
@@ -43,10 +42,8 @@ class SendGridMailSystem implements MailSystemInterface {
 			'from' => variable_get('site_mail'),
 			'fromname' => variable_get('site_name', 'Drupal'),
 		);
-		
-		
-		watchdog('sendgrid_integration', 'data: %code', array('%code' => drupal_http_build_query($data, $parent = '')), WATCHDOG_NOTICE, $link = NULL);
-				
+			
+		//Options for drupal_http_request		
     $options = array(
     	'method' => 'POST',
     	'data' => http_build_query($data),
@@ -57,8 +54,27 @@ class SendGridMailSystem implements MailSystemInterface {
 		);
 		
 		$result = drupal_http_request($server, $options);
-		watchdog('sendgrid_integration', 'returned %code', array('%code' => print_r($result, true)), WATCHDOG_NOTICE, $link = NULL);
 		
-		return TRUE;
+		//Check if sending message succeeded
+		if($result->code == 200) {
+			return TRUE;
+		}		
+		// Default response to message sending failed
+		
+		// Create log entry
+		$result_data = json_decode($result->data);
+		$errors = '';
+		foreach ($result_data->errors as $error) {
+			$errors .= $error.' ';
+		}
+		
+		$variables = array(
+			'%code' => $result->code, 
+			'%msg' => $result->error,
+			'%errors' => $errors,
+		);
+		watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_NOTICE, $link = NULL);
+				
+		return FALSE;
 	}
 }
