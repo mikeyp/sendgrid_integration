@@ -2,7 +2,7 @@
 /**
  * @file sendgrid_integratin.install
  * Main module file for SendGrid Integration.
- * 
+ *
  * Provides module configuration and help functionality.
  */
 
@@ -14,19 +14,25 @@ function sendgrid_integration_menu() {
   $items = array();
 
   $items['admin/config/system/sendgrid'] = array(
-  	'title' => t('SendGrid settings'),
-  	'description' => t('SendGrid Integration settings'),
-  	'page callback' =>'drupal_get_form',
-  	'page arguments' => array('sendgrid_integration_admin'),
-  	'access callback' => 'user_access',
-  	'access arguments' => array('Administer SendGrid settings'), 
-		);
+    'title' => 'SendGrid settings',
+    'description' => 'SendGrid Integration settings',
+    'page callback' =>'drupal_get_form',
+    'page arguments' => array('sendgrid_integration_admin'),
+    'access callback' => 'user_access',
+    'access arguments' => array('Administer SendGrid settings'), 
+  );
 
   return $items;
 }
 
+/**
+ * Implements hook_permissions().
+ */
 function sendgrid_integration_permissions() {
-  return array('title' => t('Administer SendGrid settings'), 'description' => t('Configure SendGrid options like username and password'), );
+  return array(
+    'title' => t('Administer SendGrid settings'),
+    'description' => t('Configure SendGrid options like username and password'),
+  );
 }
 
 /**
