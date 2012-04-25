@@ -25,7 +25,7 @@ class SendGridMailSystem implements MailSystemInterface {
     $user = variable_get('sendgrid_integration_username', '');
     $key = variable_get('sendgrid_integration_apikey', '');
 
-    // SMTP API, we use these to identify messages
+    // SMTP API, we use these to identify messages.
     $smtp_api = array(
     	'category' => variable_get('site_name', 'Drupal'), 
     	'unique_args' => array(
