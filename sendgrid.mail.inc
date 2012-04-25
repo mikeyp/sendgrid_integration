@@ -75,7 +75,7 @@ class SendGridMailSystem implements MailSystemInterface {
     if ($result->code == 200) {
       return TRUE;
     }
-		
+
     // Default response to message sending failed.
     // Create log entry.
     $errors = '';
