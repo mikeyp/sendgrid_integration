@@ -66,14 +66,17 @@ class SendGridMailSystem implements MailSystemInterface {
 		
 		$result = drupal_http_request($server, $options);
 		
+		$result_data = json_decode($result->data);
+		// Creating hook, allowing other modules react on sent email
+		module_invoke_all('sendgrid_integration_sent', $message['to'], $result->code, $smtp_api['unique_args'],$result_data);
+		
 		//Check if sending message succeeded
 		if($result->code == 200) {
 			return TRUE;
 		}		
 		// Default response to message sending failed
 		
-		// Create log entry
-		$result_data = json_decode($result->data);
+		// Create log entry		
 		$errors = '';
 		foreach ($result_data->errors as $error) {
 			$errors .= $error.' ';
