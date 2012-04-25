@@ -6,7 +6,9 @@ class SendGridMailSystem implements MailSystemInterface {
 	 * Email formatting, example strip away html
 	 */
 	public function format(array $message) {
-		// @todo: figure out formatting options
+		
+		$message['body'] = implode("\n\n", $message['body']);
+		
 		return $message;
 	}
 	
