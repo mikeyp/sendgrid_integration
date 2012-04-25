@@ -19,7 +19,7 @@ function sendgrid_integration_menu() {
     'page callback' =>'drupal_get_form',
     'page arguments' => array('sendgrid_integration_admin'),
     'access callback' => 'user_access',
-    'access arguments' => array('Administer SendGrid settings'), 
+    'access arguments' => array('Administer SendGrid settings'),
   );
 
   return $items;
@@ -70,8 +70,8 @@ function sendgrid_integration_admin() {
  */
 function sendgrid_integration_help($path, $arg) {
   $output = '';
-  switch($path) {
-    case 'admin/help#sendgrid_integration' :
+  switch ($path) {
+    case 'admin/help#sendgrid_integration':
       $output .= '<h3>' . t('SendGrid Integration') . '</h3>';
       $output .= '<p>' . t('Module provides own implementation of MailSystemIntegration, replacing the default implementation and uses SendGrid Web API instead.') . '</p>';
   }
