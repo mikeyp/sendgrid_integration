@@ -4,4 +4,4 @@ description = Provides sendgrid support
 core = 7.x
 package = Mail
 
-files[] = sendgrid.mail.inc
+files[] = inc/sendgrid.mail.inc
