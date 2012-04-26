@@ -72,7 +72,7 @@ class SendGridMailSystem implements MailSystemInterface {
     module_invoke_all('sendgrid_integration_sent', $message['to'], $result->code, $smtp_api['unique_args'], $result_data);
 
     // Check if sending message succeeded.
-    if ($result->code == 200) {
+    if ($result_data->message == 'success') {
       return TRUE;
     }
 
