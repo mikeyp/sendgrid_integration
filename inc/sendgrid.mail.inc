@@ -71,6 +71,12 @@ class SendGridMailSystem implements MailSystemInterface {
         'Content-Type' => 'application/x-www-form-urlencoded',
       ),
     );
+		
+    // Check if $send is set to be true.
+    if ($message['send'] != 1) {
+      watchdog('SendGrid Integration', 'Email was not sender because send value was disabled', NULL, WATCHDOG_NOTICE, $link = NULL);
+      return TRUE;
+    }
 
     $result = drupal_http_request($server, $options);
 
@@ -105,7 +111,7 @@ class SendGridMailSystem implements MailSystemInterface {
       '%msg' => $result->error,
       '%errors' => $errors,
     );
-    watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_NOTICE, $link = NULL);
+    watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_ERROR, $link = NULL);
 
     return FALSE;
   }
