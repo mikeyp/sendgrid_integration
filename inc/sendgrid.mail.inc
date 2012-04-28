@@ -39,12 +39,19 @@ class SendGridMailSystem implements MailSystemInterface {
     $data = array(
       'api_user' => $user,
       'api_key' => $key,
-      'x-smtpapi' => json_encode($smtp_api),
+      'x-smtpapi' => drupal_json_encode($smtp_api),
       'to' => $message['to'],
       'subject' => $message['subject'],
-      'from' => variable_get('site_mail'),
-      'fromname' => variable_get('site_name', 'Drupal'),
     );
+
+    // Checking if 'from email-address allready exist
+    if(isset($message['from'])) {
+      $data['from'] = $message['from'];
+    }
+    else {
+      $data['from'] = variable_get('site_mail');
+      $data['fromname'] = variable_get('site_name');
+    }
 
     // Check Content-Type of message body.
     if (strpos($message['headers']['Content-Type'], 'text/plain') !== FALSE) {
@@ -67,19 +74,23 @@ class SendGridMailSystem implements MailSystemInterface {
 
     $result = drupal_http_request($server, $options);
 
-    $result_data = json_decode($result->data);
+    $result_data = drupal_json_decode($result->data);
+		
+		watchdog('SendGrid Integration', 'Result data: %code', array('%code' => print_r($result_data, TRUE)), WATCHDOG_NOTICE, $link = NULL);
+		
+		
     // Creating hook, allowing other modules react on sent email.
     module_invoke_all('sendgrid_integration_sent', $message['to'], $result->code, $smtp_api['unique_args'], $result_data);
 
     // Check if sending message succeeded.
-    if ($result_data->message == 'success') {
+    if ($result_data['message'] == 'success') {
       return TRUE;
     }
 
     // Default response to message sending failed.
     // Create log entry.
     $errors = '';
-    foreach ($result_data->errors as $error) {
+    foreach ($result_data['errors'] as $error) {
       $errors .= $error . ' ';
     }
 
