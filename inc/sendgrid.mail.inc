@@ -44,8 +44,8 @@ class SendGridMailSystem implements MailSystemInterface {
       'subject' => $message['subject'],
     );
 
-    // Checking if 'from email-address allready exist.
-    if(isset($message['from'])) {
+    // Checking if 'from' email-address allready exist.
+    if (isset($message['from'])) {
       $data['from'] = $message['from'];
     }
     else {
