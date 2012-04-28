@@ -75,7 +75,7 @@ class SendGridMailSystem implements MailSystemInterface {
     $result = drupal_http_request($server, $options);
 
     // Checking if we have any result data 
-    // (connection didn't time out for example)
+    // (connection didn't time out for example).
     $result_data = array();
     if (isset($result->data)) {
       $result_data = drupal_json_decode($result->data);
