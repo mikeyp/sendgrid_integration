@@ -28,10 +28,12 @@ function sendgrid_integration_menu() {
 /**
  * Implements hook_permissions().
  */
-function sendgrid_integration_permissions() {
+function sendgrid_integration_permission() {
   return array(
-    'title' => t('Administer SendGrid settings'),
-    'description' => t('Configure SendGrid options like username and password'),
+    'administer sendgrid settings' => array(
+      'title' => t('Administer SendGrid settings'),
+      'description' => t('Configure SendGrid options like username and password'),
+    ),
   );
 }
 
@@ -77,3 +79,4 @@ function sendgrid_integration_help($path, $arg) {
   }
   return $output;
 }
+
