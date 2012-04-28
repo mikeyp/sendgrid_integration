@@ -76,9 +76,6 @@ class SendGridMailSystem implements MailSystemInterface {
 
     $result_data = drupal_json_decode($result->data);
 		
-		watchdog('SendGrid Integration', 'Result data: %code', array('%code' => print_r($result_data, TRUE)), WATCHDOG_NOTICE, $link = NULL);
-		
-		
     // Creating hook, allowing other modules react on sent email.
     module_invoke_all('sendgrid_integration_sent', $message['to'], $result->code, $smtp_api['unique_args'], $result_data);
 
