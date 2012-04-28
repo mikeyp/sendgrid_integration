@@ -21,9 +21,10 @@ function sendgrid_integration_disable() {
 /**
  * Implements hook_install().
  */
-function mymodule_install() {
+function sendgrid_integration_install() {
   drupal_set_message(st("You can configure SendGrid settings under !link",
-    array( '!link' => l(st('Administer > Configuration > SendGrid settings'),  'admin/config/system/sendgrid'))
+    array(
+      '!link' => l(st('Administer > Configuration > SendGrid settings'), 'admin/config/system/sendgrid'))
   ));
 }
 
