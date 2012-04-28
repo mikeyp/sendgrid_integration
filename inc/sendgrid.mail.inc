@@ -116,7 +116,7 @@ class SendGridMailSystem implements MailSystemInterface {
     // This add more error tolerancy.
     if ($result->code == '-110') {
       $queue = DrupalQueue::get('SendGridResendQueue')->createItem($message);
-		}
+    }
 
     return FALSE;
   }

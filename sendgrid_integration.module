@@ -81,7 +81,7 @@ function sendgrid_integration_help($path, $arg) {
 }
 
 /**
- * Implementation of hook_cron_queue_info().
+ * Implements hook_cron_queue_info().
  */
 function sendgrid_integration_cron_queue_info() {
   $queues = array();
@@ -90,9 +90,13 @@ function sendgrid_integration_cron_queue_info() {
     'time' => 60,
   );
 
-	return $queues;
+  return $queues;
 }
 
+/**
+ * Cron queue worker callback function.
+ * Tries to send email again, if it previously failed with good reason.
+ */
 function sendgrid_integration_email_resend($message) {
   // Defining parameters first to improve code readability.
   $module = $message['module'];
