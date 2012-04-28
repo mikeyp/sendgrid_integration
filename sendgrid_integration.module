@@ -106,6 +106,6 @@ function sendgrid_integration_email_resend($message) {
   $params = $message['params'];
   $from = $message['from'];
   $send = $message['send'];
-	
+
   drupal_mail($module, $key, $to, $language, $params, $from, $send);
 }
