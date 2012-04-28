@@ -44,7 +44,7 @@ class SendGridMailSystem implements MailSystemInterface {
       'subject' => $message['subject'],
     );
 
-    // Checking if 'from email-address allready exist
+    // Checking if 'from email-address allready exist.
     if(isset($message['from'])) {
       $data['from'] = $message['from'];
     }
@@ -75,7 +75,7 @@ class SendGridMailSystem implements MailSystemInterface {
     $result = drupal_http_request($server, $options);
 
     $result_data = drupal_json_decode($result->data);
-		
+
     // Creating hook, allowing other modules react on sent email.
     module_invoke_all('sendgrid_integration_sent', $message['to'], $result->code, $smtp_api['unique_args'], $result_data);
 
