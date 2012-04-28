@@ -79,4 +79,3 @@ function sendgrid_integration_help($path, $arg) {
   }
   return $output;
 }
-
