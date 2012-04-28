@@ -17,3 +17,11 @@ function sendgrid_integration_enable() {
 function sendgrid_integration_disable() {
   variable_set('mail_system', array('default-system' => 'DefaultMailSystem'));
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function sendgrid_integration_uninstall() {
+  variable_del(sendgrid_integration_username);
+  variable_del(sendgrid_integration_apikey);
+}

@@ -19,7 +19,7 @@ function sendgrid_integration_menu() {
     'page callback' =>'drupal_get_form',
     'page arguments' => array('sendgrid_integration_admin'),
     'access callback' => 'user_access',
-    'access arguments' => array('Administer SendGrid settings'),
+    'access arguments' => array('administer sendgrid settings'),
   );
 
   return $items;
