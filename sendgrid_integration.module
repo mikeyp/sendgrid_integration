@@ -79,3 +79,29 @@ function sendgrid_integration_help($path, $arg) {
   }
   return $output;
 }
+
+/**
+ * Implementation of hook_cron_queue_info().
+ */
+function sendgrid_integration_cron_queue_info() {
+  $queues = array();
+  $queues['SendGridResendQueue'] = array(
+    'worker callback' => 'sendgrid_integration_email_resend',
+    'time' => 60,
+  );
+
+	return $queues;
+}
+
+function sendgrid_integration_email_resend($message) {
+  // Defining parameters first to improve code readability.
+  $module = $message['module'];
+  $key = $message['key'];
+  $to = $message['to'];
+  $language = $message['language'];
+  $params = $message['params'];
+  $from = $message['from'];
+  $send = $message['send'];
+	
+  drupal_mail($module, $key, $to, $language, $params, $from, $send);
+}

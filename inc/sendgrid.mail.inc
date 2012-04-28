@@ -66,12 +66,11 @@ class SendGridMailSystem implements MailSystemInterface {
     $options = array(
       'method' => 'POST',
       'data' => http_build_query($data),
-      'timeout' => 30,
+      'timeout' => 10,
       'headers' => array(
         'Content-Type' => 'application/x-www-form-urlencoded',
       ),
     );
-		
     // Check if $send is set to be true.
     if ($message['send'] != 1) {
       watchdog('SendGrid Integration', 'Email was not sender because send value was disabled', NULL, WATCHDOG_NOTICE, $link = NULL);
@@ -112,6 +111,12 @@ class SendGridMailSystem implements MailSystemInterface {
       '%errors' => $errors,
     );
     watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_ERROR, $link = NULL);
+
+    // Add message to queue if reason for failing was timeout.
+    // This add more error tolerancy.
+    if ($result->code == '-110') {
+      $queue = DrupalQueue::get('SendGridResendQueue')->createItem($message);
+		}
 
     return FALSE;
   }
