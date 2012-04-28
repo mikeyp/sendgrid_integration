@@ -12,15 +12,15 @@
 
 /**
  * This hook is invoked right after email has been sent.
- * 
- * @param $to
+ *
+ * @param string $to
  *   Address of email recipient
- * @param $result_code
+ * @param integer $result_code
  *   http result code returned by drupal_http_request.
  *     - 2xx Request were successfull.
  *     - 4xx There were errors in parameters.
  *     - 5xx API call was unsuccessfull.
- * @param $unique_args
+ * @param array $unique_args
  *   Unique arguments used when email were sent as array, keyd by argument name.
  *     - id Message id
  *     - uid User id
@@ -29,7 +29,7 @@
  *   Result data returned by drupal_http_request as array.
  */
 function hook_sendgrid_integration_sent($to, $result_code, $unique_args, $result_data) {
-	
+
 }
 
 /**
