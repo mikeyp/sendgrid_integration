@@ -116,6 +116,7 @@ class SendGridMailSystem implements MailSystemInterface {
     // another valid reason. This adds more error tolerancy.
     $codes = array(
       -110,
+      404,
       500,
       502,
       503,
