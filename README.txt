@@ -26,4 +26,5 @@ Installing this module is simple
 If sending email fails with certain (pre-defined) response codes will email be
 added to Cron Queue for later delivery.
 You may want to configure Cron running period and when it is possible also
-add your drupal site to crontab, read more about cront at http://drupal.org/cron.
+add your drupal site to crontab, read more about cront at 
+http://drupal.org/cron.
