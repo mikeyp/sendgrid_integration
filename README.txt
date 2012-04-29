@@ -20,3 +20,10 @@ Installing this module is simple
 2. Navigate to administer >> build >> modules and enable SendGrid Integration
 
 3. Configure your SendGrid Username and API-Key in admin/config/system/sendgrid
+
+#Optional
+
+If sending email fails with certain (pre-defined) response codes will email be
+added to Cron Queue for later delivery.
+You may want to configure Cron running period and when it is possible also
+add your drupal site to crontab, read more about cront at http://drupal.org/cron.
