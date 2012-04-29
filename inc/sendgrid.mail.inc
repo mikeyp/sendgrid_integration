@@ -112,9 +112,16 @@ class SendGridMailSystem implements MailSystemInterface {
     );
     watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_ERROR, $link = NULL);
 
-    // Add message to queue if reason for failing was timeout.
+    // Add message to queue if reason for failing was timeout or another valid reason.
     // This add more error tolerancy.
-    if ($result->code == '-110') {
+    $codes = array(
+      -110,
+      500,
+      502,
+      503,
+      504,
+    );
+    if (in_array($result->code, $codes)) {
       $queue = DrupalQueue::get('SendGridResendQueue')->createItem($message);
     }
 
