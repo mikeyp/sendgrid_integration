@@ -117,6 +117,7 @@ class SendGridMailSystem implements MailSystemInterface {
     $codes = array(
       -110,
       404,
+      408,
       500,
       502,
       503,
