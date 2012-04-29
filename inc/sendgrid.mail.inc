@@ -112,8 +112,8 @@ class SendGridMailSystem implements MailSystemInterface {
     );
     watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_ERROR, $link = NULL);
 
-    // Add message to queue if reason for failing was timeout or another valid reason.
-    // This add more error tolerancy.
+    // Add message to queue if reason for failing was timeout
+    // another valid reason. This add more error tolerancy.
     $codes = array(
       -110,
       500,
