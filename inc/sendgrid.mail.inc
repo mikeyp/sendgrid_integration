@@ -79,7 +79,7 @@ class SendGridMailSystem implements MailSystemInterface {
 
     $result = drupal_http_request($server, $options);
 
-    // Checking if we have any result data
+    // Checking if we got any result data
     // (connection didn't time out for example).
     $result_data = array();
     if (isset($result->data)) {
@@ -113,7 +113,7 @@ class SendGridMailSystem implements MailSystemInterface {
     watchdog('SendGrid Integration', 'Email sending failed with %code/%msg. %errors', $variables, WATCHDOG_ERROR, $link = NULL);
 
     // Add message to queue if reason for failing was timeout or
-    // another valid reason. This adds more error tolerancy.
+    // another valid reason. This adds more error tolerance.
     $codes = array(
       -110,
       404,
