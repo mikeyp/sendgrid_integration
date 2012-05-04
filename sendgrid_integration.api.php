@@ -32,7 +32,9 @@
  *   Result data returned by drupal_http_request as array.
  */
 function hook_sendgrid_integration_sent($to, $result_code, $unique_args, $result_data) {
-
+  if($unique_args['module'] == 'my_module' && $result_code = 200) {
+    watchdog('My Module', 'My module has successfully sent email', NULL, WATCHDOG_NOTICE, $link = NULL);
+  }
 }
 
 /**
