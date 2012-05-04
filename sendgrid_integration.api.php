@@ -11,7 +11,7 @@
  */
 
 /**
- * This hook is invoked right after email has been sent.
+ * This hook is invoked after email has been sent.
  *
  * @param string $to
  *   Address of email recipient
@@ -23,13 +23,13 @@
  *     - 5xx API call was unsuccessfull.
  *
  * @param array $unique_args
- *   Unique arguments used when email were sent as array, keyd by argument name.
+ *   Unique arguments used when email were sent, keyd by argument name.
  *     - id Message id
  *     - uid User id
  *     - module Module witch sended the message
  *
- * @paramn $result_data
- *   Result data returned by drupal_http_request as array.
+ * @param array $result_data
+ *   Result data returned by drupal_http_request.
  */
 function hook_sendgrid_integration_sent($to, $result_code, $unique_args, $result_data) {
   if($unique_args['module'] == 'my_module' && $result_code = 200) {
