@@ -25,7 +25,7 @@
  *     - id Message id
  *     - uid User id
  *     - module Module witch sended the message
- * $paramn $result_data
+ * @paramn $result_data
  *   Result data returned by drupal_http_request as array.
  */
 function hook_sendgrid_integration_sent($to, $result_code, $unique_args, $result_data) {
