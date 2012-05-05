@@ -109,3 +109,71 @@ function sendgrid_integration_email_resend($message) {
 
   drupal_mail($module, $key, $to, $language, $params, $from, $send);
 }
+
+/**
+ * Get list of bounced emails.
+ *
+ * @param string $start_date
+ * Start date in format of YYYY-MM-DD.
+ *
+ * @param date $end_date
+ * End date in format of YYYY-MM-DD.
+ *
+ * @param string $type
+ * Optional type, either 'hard' or 'soft'.
+ *
+ * @param string $email
+ * Optional email address used to searching for.
+ *
+ * @return array
+ * List of bounces.
+ */
+function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, $email = NULL) {
+  // Connection url for bounces.
+  $server = "https://sendgrid.com/api/bounces.get.json";
+  $user = variable_get('sendgrid_integration_username', '');
+  $key = variable_get('sendgrid_integration_apikey', '');
+
+  if (isset($start_date) == FALSE || isset($end_date) == FALSE) {
+    watchdog('SendGrid Integration', 'Error on calling get_bounches: Missing date parameter', NULL, WATCHDOG_NOTICE, $link = NULL);
+
+    return array();
+  }
+
+  $data = array(
+    'date' => 1,
+    'start_date' => $start_date,
+    'end_date' => $end_date,
+    'api_user' => $user,
+    'api_key' => $key,
+  );
+
+  if (isset($type)) {
+    $data['type'] = $type;
+  }
+
+  if (isset($email)) {
+    $data['email'] = $email;
+  }
+
+  // Options for drupal_http_request.
+  $options = array(
+    'method' => 'GET',
+    'data' => http_build_query($data),
+    'timeout' => 30,
+    'headers' => array(
+      'Content-Type' => 'application/x-www-form-urlencoded',
+    ),
+  );
+
+  $response = drupal_http_request($server, $options);
+
+  $list = drupal_json_decode($response->data);
+
+  // Check if server returned error messages
+  if (isset($list['error'])) {
+    watchdog('SendGrid Integration', 'Error while retrieving bounces list: %error', array('%error' => $list['error']), WATCHDOG_NOTICE, $link = NULL);
+  }
+
+  return $list;
+}
