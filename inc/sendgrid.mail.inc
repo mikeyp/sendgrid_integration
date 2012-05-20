@@ -21,7 +21,14 @@ class SendGridMailSystem implements MailSystemInterface {
    */
   public function mail(array $message) {
     // SendGrid authentication information.
-    $server = 'https://sendgrid.com/api/mail.send.json';
+    if(variable_get('sendgrid_integration_ssl', TRUE) == TRUE) {
+      $protocol = 'https://';
+    }
+    else {
+      $protocol = 'http://';
+    }
+
+    $server = $protocol . 'sendgrid.com/api/mail.send.json';
     $user = variable_get('sendgrid_integration_username', '');
     $key = variable_get('sendgrid_integration_apikey', '');
 
