@@ -25,14 +25,20 @@ class SendGridMailSystem implements MailSystemInterface {
     $user = variable_get('sendgrid_integration_username', '');
     $key = variable_get('sendgrid_integration_apikey', '');
 
+    // Defining default unique args.
+    $unique_args = array(
+      'id' => $message['id'],
+      'uid' => $message['params']['account']->uid,
+      'module' => $message['module'],
+    );
+
+    // Allow other modules to modify unique arguments.
+    $unique_args = module_invoke_all('sendgrid_integration_unique_args_alter', $unique_args);
+
     // SMTP API, we use these to identify messages.
     $smtp_api = array(
       'category' => variable_get('site_name', 'Drupal'),
-      'unique_args' => array(
-        'id' => $message['id'],
-        'uid' => $message['params']['account']->uid,
-        'module' => $message['module'],
-      ),
+      'unique_args' => $unique_args,
     );
 
     // Data sended to sendgrid.

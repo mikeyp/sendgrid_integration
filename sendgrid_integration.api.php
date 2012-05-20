@@ -38,5 +38,18 @@ function hook_sendgrid_integration_sent($to, $result_code, $unique_args, $result
 }
 
 /**
+ * This hook is invoked before mail is sent, allowing modification of unique_args.
+ * @param array $unique_args
+ *   Unique arguments.
+ * @return array
+ *   Returned array will be used as unique arguments.
+ */
+function hook_sendgrid_integration_unique_args_alter($unique_args) {
+  $unique_args['time'] = time();
+
+  return $unique_args;
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
