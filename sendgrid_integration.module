@@ -64,6 +64,17 @@ function sendgrid_integration_admin() {
     '#default_value' => variable_get('sendgrid_integration_apikey', ''),
   );
 
+  $form['security'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Security'),
+  );
+
+  $form['security']['sendgrid_integration_ssl'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use secure (SSL) connection?'),
+    '#default_value' => variable_get('sendgrid_integration_ssl', TRUE),
+  );
+
   return system_settings_form($form);
 }
 
