@@ -35,4 +35,5 @@ function sendgrid_integration_install() {
 function sendgrid_integration_uninstall() {
   variable_del('sendgrid_integration_username');
   variable_del('sendgrid_integration_apikey');
+  variable_del('sendgrid_integration_ssl');
 }
