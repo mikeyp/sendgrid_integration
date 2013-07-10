@@ -35,9 +35,12 @@ class SendGridMailSystem implements MailSystemInterface {
     // Defining default unique args.
     $unique_args = array(
       'id' => $message['id'],
-      'uid' => $message['params']['account']->uid,
       'module' => $message['module'],
     );
+
+    if (isset($message['params']['account']->uid)) {
+      $unique_args['uid'] = $message['params']['account']->uid;
+    }
 
     // Allow other modules to modify unique arguments.
     $args = module_invoke_all('sendgrid_integration_unique_args_alter', $unique_args);
