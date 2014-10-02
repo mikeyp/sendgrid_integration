@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Main module file for SendGrid Integration.
@@ -6,6 +7,7 @@
  * Provides module configuration and help functionality.
  */
 
+define('SENDGRID_INTEGRATION_EMAIL_REGEX', '/^\s*(.+?)\s*<\s*([^>]+)\s*>$/');
 
 /**
  * Implements hook_menu().
@@ -187,4 +189,38 @@ function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, 
   }
 
   return $list;
+}
+
+/**
+ * Helper to generate an array of recipients.
+ *
+ * @param mixed $to
+ *   a comma delimited list of email addresses in 1 of 2 forms:
+ *   user@domain.com
+ *   any number of names <user@domain.com>
+ *
+ * @return array
+ *   array of email addresses and an array of names.
+ */
+function sendgrid_integration_get_to($to) {
+  $to_emails = $to_names = array();
+  $to_array = explode(',', $to);
+  foreach ($to_array as $email) {
+    list($address, $name) = sendgrid_integration_parse_address($email);
+      $to_emails[] = $address;
+      $to_names[]= $name;
+  }
+  return array('emails' => $to_emails, 'names' => $to_names);
+}
+
+/**
+ * Split an email address into it's name and address components.
+ */
+function sendgrid_integration_parse_address($email) {
+  if (preg_match(SENDGRID_INTEGRATION_EMAIL_REGEX, $email, $matches)) {
+    return array($matches[2], $matches[1]);
+  }
+  else {
+    return array($email, '');
+  }
 }
