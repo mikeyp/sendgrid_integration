@@ -17,6 +17,9 @@ REQUIREMENTS
 Module dependencies:
 Composer Manager - A Drupal module to faciltate the use of Composer:
 https://getcomposer.org
+Composer is being used because it is time to get off the island:
+https://www.acquia.com/blog/using-composer-manager-get-island-now
+
 Mailsystem - A module to create an agnostic management layer for Mail. Very
 useful for controling the mail system on Drupal.
 
