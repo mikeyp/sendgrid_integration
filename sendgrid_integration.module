@@ -18,7 +18,7 @@ function sendgrid_integration_menu() {
   $items['admin/config/system/sendgrid'] = array(
     'title' => 'SendGrid settings',
     'description' => 'SendGrid Integration settings',
-    'page callback' =>'drupal_get_form',
+    'page callback' => 'drupal_get_form',
     'page arguments' => array('sendgrid_integration_admin'),
     'access callback' => 'user_access',
     'access arguments' => array('administer sendgrid settings'),
@@ -197,8 +197,8 @@ function sendgrid_integration_get_to($to) {
   $to_array = explode(',', $to);
   foreach ($to_array as $email) {
     list($address, $name) = sendgrid_integration_parse_address($email);
-      $to_emails[] = $address;
-      $to_names[]= $name;
+    $to_emails[] = $address;
+    $to_names[] = $name;
   }
   return array('emails' => $to_emails, 'names' => $to_names);
 }
