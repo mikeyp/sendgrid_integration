@@ -20,18 +20,14 @@ class SendGridMailSystem implements MailSystemInterface {
    * Send email message.
    */
   public function mail(array $message) {
-    // SendGrid authentication information.
-    // @TODO update to V3.
-    if(variable_get('sendgrid_integration_ssl', TRUE) == TRUE) {
-      $protocol = 'https://';
-    }
-    else {
-      $protocol = 'http://';
-    }
 
-    $server = $protocol . 'sendgrid.com/api/mail.send.json';
-    $user = variable_get('sendgrid_integration_username', '');
-    $key = variable_get('sendgrid_integration_apikey', '');
+    // @TODO update to V3.
+
+    $server = 'https://api.sendgrid.com/v3/mail.send.json';
+    $user_id = variable_get('sendgrid_integration_apikey_id', '');
+    $key_secret = variable_get('sendgrid_integration_apikey', '');
+
+    $sendgrid = new SendGrid($key_secret);
 
     // Defining default unique args.
     $unique_args = array(
