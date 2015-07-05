@@ -50,31 +50,20 @@ function sendgrid_integration_admin() {
     '#title' => t('Authentication'),
   );
 
-  $form['authentication']['sendgrid_integration_username'] = array(
+  $form['authentication']['sendgrid_integration_apikey_id'] = array(
     '#type' => 'textfield',
-    '#title' => t('Username'),
-    '#description' => t('Your SendGrid Username'),
+    '#title' => t('API Key ID'),
+    '#description' => t('The ID of your key pair'),
     '#required' => TRUE,
-    '#default_value' => variable_get('sendgrid_integration_username', ''),
+    '#default_value' => variable_get('sendgrid_integration_apikey_id', ''),
   );
 
   $form['authentication']['sendgrid_integration_apikey'] = array(
     '#type' => 'password',
-    '#title' => t('API Key'),
-    '#description' => t('Your SendGrid Password'),
+    '#title' => t('API Secret Key'),
+    '#description' => t('The secret key of your key pair. These are only generated once by Sendgrid.'),
     '#required' => TRUE,
     '#default_value' => variable_get('sendgrid_integration_apikey', ''),
-  );
-
-  $form['security'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Security'),
-  );
-
-  $form['security']['sendgrid_integration_ssl'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Use secure (SSL) connection?'),
-    '#default_value' => variable_get('sendgrid_integration_ssl', TRUE),
   );
 
   return system_settings_form($form);
