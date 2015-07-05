@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * Implements Drupal MailSystemInterface
+ * Implements Drupal MailSystemInterface.
  */
 
 class SendGridMailSystem implements MailSystemInterface {
 
   /**
-   * Email formatting, example strip away html
+   * Email formatting, example strip away html.
    */
   public function format(array $message) {
     // Join message array.
@@ -17,10 +17,11 @@ class SendGridMailSystem implements MailSystemInterface {
   }
 
   /**
-   * Send email message
+   * Send email message.
    */
   public function mail(array $message) {
     // SendGrid authentication information.
+    // @TODO update to V3.
     if(variable_get('sendgrid_integration_ssl', TRUE) == TRUE) {
       $protocol = 'https://';
     }

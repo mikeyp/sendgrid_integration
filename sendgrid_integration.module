@@ -132,6 +132,7 @@ function sendgrid_integration_email_resend($message) {
  */
 function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, $email = NULL) {
   // Connection url for bounces.
+  // @TODO update to V3.
   $server = "https://sendgrid.com/api/bounces.get.json";
   $user = variable_get('sendgrid_integration_username', '');
   $key = variable_get('sendgrid_integration_apikey', '');
