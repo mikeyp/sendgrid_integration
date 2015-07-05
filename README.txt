@@ -7,24 +7,34 @@ Use the issue tracker for bug reports or questions about Drupal integration.
 If you want more info about SendGrid email services, 
 contact SendGrid (http://sendgrid.com) instead
 
-FUNCTIONALITY:
+FUNCTIONALITY
+--------------------------------------------------------------------------------
 This module overrides default email sending behaviour, 
 sending emails throught SendGrid services instead.
 
-INSTALLATION:
+REQUIREMENTS
+--------------------------------------------------------------------------------
+Module dependencies:
+Composer Manager - A Drupal module to faciltate the use of Composer:
+https://getcomposer.org
+Mailsystem - A module to create an agnostic management layer for Mail. Very
+useful for controling the mail system on Drupal.
+
+INSTALLATION
+--------------------------------------------------------------------------------
 Installing this module is simple
 
 1. Move this folder under modules directory of your installation,
    example sites/all/modules or sites/default/modules
    
-2. Navigate to administer >> build >> modules and enable SendGrid Integration
+2. Navigate to Modules and enable SendGrid Integration in the Mail category.
 
 3. Configure your SendGrid Username and API-Key in admin/config/system/sendgrid
 
-#Optional
+OPTIONAL
+--------------------------------------------------------------------------------
 
-If sending email fails with certain (pre-defined) response codes will email be
-added to Cron Queue for later delivery.
-You may want to configure Cron running period and when it is possible also
-add your drupal site to crontab, read more about cront at 
-http://drupal.org/cron.
+If sending email fails with certain (pre-defined) response codes the message be
+added to Cron Queue for later delivery. In order for this to function, you must
+configure Cron running period and when it is possible also add your drupal site
+to crontab (Linux only), read more about cron at https://www.drupal.org/cron.
