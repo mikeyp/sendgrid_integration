@@ -1,6 +1,5 @@
 SendGrid Integration for Drupal
 --------------------------------------------------------------------------------
-
 This project is not affiliated with SendGrid, Inc.
 
 Use the issue tracker located at Drupal.org
@@ -19,6 +18,7 @@ REQUIREMENTS
 Module dependencies:
 Composer Manager - A Drupal module to faciltate the use of Composer:
 https://getcomposer.org
+  
   Composer is being used because it makes life easy:
   https://www.acquia.com/blog/using-composer-manager-get-island-now
 
@@ -38,8 +38,12 @@ Installing this module is simple
 
 OPTIONAL
 --------------------------------------------------------------------------------
-
 If sending email fails with certain (pre-defined) response codes the message be
 added to Cron Queue for later delivery. In order for this to function, you must
 configure Cron running period and when it is possible also add your drupal site
 to crontab (Linux only), read more about cron at https://www.drupal.org/cron.
+
+RESOURCES
+--------------------------------------------------------------------------------
+Information about the Sendgrid PHP Library is availabe on Github:
+https://github.com/sendgrid/sendgrid-php
