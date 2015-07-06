@@ -1,11 +1,10 @@
-/**
- * SendGrid Integration
- */
+SendGrid Integration for Drupal
+--------------------------------------------------------------------------------
 
 This project is not affiliated with SendGrid, Inc.
 Use the issue tracker for bug reports or questions about Drupal integration.
-If you want more info about SendGrid email services, 
-contact SendGrid (http://sendgrid.com) instead
+If you want more info about SendGrid email services, contact SendGrid
+(https://sendgrid.com).
 
 FUNCTIONALITY
 --------------------------------------------------------------------------------
