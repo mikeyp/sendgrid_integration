@@ -15,7 +15,7 @@ define('SENDGRID_INTEGRATION_EMAIL_REGEX', '/^\s*(.+?)\s*<\s*([^>]+)\s*>$/');
 function sendgrid_integration_menu() {
   $items = array();
 
-  $items['admin/config/system/sendgrid'] = array(
+  $items['admin/config/services/sendgrid'] = array(
     'title' => 'SendGrid settings',
     'description' => 'SendGrid Integration settings',
     'page callback' => 'drupal_get_form',
