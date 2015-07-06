@@ -2,22 +2,25 @@ SendGrid Integration for Drupal
 --------------------------------------------------------------------------------
 
 This project is not affiliated with SendGrid, Inc.
-Use the issue tracker for bug reports or questions about Drupal integration.
-If you want more info about SendGrid email services, contact SendGrid
+
+Use the issue tracker located at Drupal.org
+(https://www.drupal.org/sendgrid_integration) for bug reports or questions
+about this module.
+If you want more info about SendGrid services, contact SendGrid
 (https://sendgrid.com).
 
 FUNCTIONALITY
 --------------------------------------------------------------------------------
-This module overrides default email sending behaviour, 
-sending emails throught SendGrid services instead.
+This module overrides default email sending behaviour andsending emails through
+SendGrid Transactional Email service instead.
 
 REQUIREMENTS
 --------------------------------------------------------------------------------
 Module dependencies:
 Composer Manager - A Drupal module to faciltate the use of Composer:
 https://getcomposer.org
-Composer is being used because it is time to get off the island:
-https://www.acquia.com/blog/using-composer-manager-get-island-now
+  Composer is being used because it makes life easy:
+  https://www.acquia.com/blog/using-composer-manager-get-island-now
 
 Mailsystem - A module to create an agnostic management layer for Mail. Very
 useful for controling the mail system on Drupal.
