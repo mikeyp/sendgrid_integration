@@ -47,8 +47,6 @@ class SendGridMailSystem implements MailSystemInterface {
 
     // SMTP API, we use these to identify messages.
     $smtp_api = array(
-      // @TODO this needs to be the module calling the mail not the sitename.
-      'category' => variable_get('site_name', 'Drupal'),
       'unique_args' => $unique_args,
     );
 
@@ -58,9 +56,6 @@ class SendGridMailSystem implements MailSystemInterface {
 
     // Data sended to sendgrid.
     $data = array(
-      'api_user' => $user,
-      'api_key' => $key,
-      'x-smtpapi' => drupal_json_encode($smtp_api),
       'to' => $to_emails,
       'subject' => $message['subject'],
     );
@@ -95,11 +90,23 @@ class SendGridMailSystem implements MailSystemInterface {
       return TRUE;
     }
     // Build the Sendgrid mail object.
+    // The message MODULE and ID is used for the Category. Category is the only
+    // thing in the Sendgrid UI you can use to sort mail.
+    $sitename =  variable_get('site_name');
+    // This is an array of categories for Sendgrid statistics.
+    $categories = array(
+      $sitename,
+      $message['module'],
+      $message['id'],
+    );
     $sendgrid_message
       ->setFrom($data['from'])
+      ->setFromName($data['fromname'])
       ->setSubject($data['subject'])
       ->setHtml($data['html'])
-      ->setText($date['text']);
+      ->setText($date['text'])
+      ->setCategories($categories)
+      ->setUniqueArgs($unique_args);
 
     // If we have a To name we use it.
     if (!empty($data['toname'])) {
