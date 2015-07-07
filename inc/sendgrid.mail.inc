@@ -104,7 +104,7 @@ class SendGridMailSystem implements MailSystemInterface {
       ->setFromName($data['fromname'])
       ->setSubject($data['subject'])
       ->setHtml($data['html'])
-      ->setText($date['text'])
+      ->setText($data['text'])
       ->setCategories($categories)
       ->setUniqueArgs($unique_args);
 
