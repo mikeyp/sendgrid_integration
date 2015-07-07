@@ -75,15 +75,6 @@ class SendGridMailSystem implements MailSystemInterface {
       $data['fromname'] = variable_get('site_name');
     }
 
-    // Check Content-Type of message body.
-    if (strpos($message['headers']['Content-Type'], 'text/plain') !== FALSE) {
-      // Message body is text/plain.
-      $data['text'] = drupal_wrap_mail(drupal_html_to_text($message['body']));
-    }
-    else {
-      $data['html'] = $message['body'];
-    }
-
     // Check if $send is set to be true.
     if ($message['send'] != 1) {
       watchdog('SendGrid Integration', 'Email was not sent because send value was disabled', NULL, WATCHDOG_NOTICE, $link = NULL);
@@ -103,8 +94,6 @@ class SendGridMailSystem implements MailSystemInterface {
       ->setFrom($data['from'])
       ->setFromName($data['fromname'])
       ->setSubject($data['subject'])
-      ->setHtml($data['html'])
-      ->setText($data['text'])
       ->setCategories($categories)
       ->setUniqueArgs($unique_args);
 
@@ -114,6 +103,15 @@ class SendGridMailSystem implements MailSystemInterface {
     }
     else {
       $sendgrid_message->addTo($data['to']);
+    }
+
+    // Check Content-Type of message body.
+    if (strpos($message['headers']['Content-Type'], 'text/plain') !== FALSE) {
+      // Message body is text/plain.
+      $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+    }
+    else {
+      $sendgrid_message->setHtml($message['body']);
     }
 
     // Lets try and send the message and catch the error.
