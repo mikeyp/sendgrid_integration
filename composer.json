@@ -1,11 +1,24 @@
 {
-  "name": "sendgrid_integration",
+  "name": "drupal/contrib/sendgrid_integration",
   "description": "Example of using the SendGrid php library.",
   "version": "7.x-1.x",
   "homepage": "https://www.drupal.org/project/sendgrid_integration",
   "license": "GNU",
-  "keywords": ["SendGrid", "sendgrid", "email", "send", "grid", "php"],
+  "keywords": [
+    "SendGrid",
+    "sendgrid",
+    "email",
+    "send",
+    "grid",
+    "php"
+  ],
   "require": {
-    "sendgrid/sendgrid": "~3.2"
-  }
+    "sendgrid/sendgrid": "dev-master"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/taz77/sendgrid-php"
+    }
+  ]
 }
