@@ -180,3 +180,15 @@ function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, 
 
   return $list;
 }
+
+/**
+ * Split an email address into it's name and address components.
+ */
+function sendgrid_integration_parse_address($email) {
+  if (preg_match(SENDGRID_INTEGRATION_EMAIL_REGEX, $email, $matches)) {
+    return array($matches[2], $matches[1]);
+  }
+  else {
+    return array($email, '');
+  }
+}
