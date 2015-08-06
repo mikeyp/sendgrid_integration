@@ -22,11 +22,17 @@ class SendGridMailSystem implements MailSystemInterface {
   public function mail(array $message) {
 
     $key_secret = variable_get('sendgrid_integration_apikey', '');
-
+    $options = array(
+      'turn_off_ssl_verification' => FALSE,
+      'protocol' => 'https',
+      'port' => NULL,
+      'url' => NULL,
+      'raise_exceptions' => FALSE,
+    );
     // Create a new SendGrid object.
-    $sendgrid = new SendGrid($key_secret);
+    $sendgrid = new SendGrid($key_secret, $options);
     $sendgrid_message = new SendGrid\Email();
-
+    $sitename = variable_get('site_name');
     // Defining default unique args.
     $unique_args = array(
       'id' => $message['id'],
@@ -45,34 +51,15 @@ class SendGridMailSystem implements MailSystemInterface {
       $unique_args = $args;
     }
 
-    // SMTP API, we use these to identify messages.
-    $smtp_api = array(
-      'unique_args' => $unique_args,
-    );
-
-    $parsed_to = sendgrid_integration_get_to($message['to']);
-    $to_emails = $parsed_to['emails'];
-    $to_names = $parsed_to['names'];
-
-    // Data sended to sendgrid.
-    $data = array(
-      'to' => $to_emails,
-      'subject' => $message['subject'],
-    );
-
-    if (!empty($to_names)) {
-      $data['toname'] = $to_names;
-    }
-
     // Checking if 'from' email-address already exist.
-    if (isset($message['from'])) {
-      list($from_address, $from_name) = sendgrid_integration_parse_address($message['from']);
-      $data['from'] = $from_address;
-      $data['fromname'] = $from_name;
+    if (isset($message['headers']['from'])) {
+      $fromaddrarray = sendgrid_integration_parse_address($message['headers']['from']);
+      $data['from'] = $fromaddrarray[0];
+      $data['fromname'] = $fromaddrarray[1];
     }
     else {
       $data['from'] = variable_get('site_mail');
-      $data['fromname'] = variable_get('site_name');
+      $data['fromname'] = $sitename;
     }
 
     // Check if $send is set to be true.
@@ -83,7 +70,7 @@ class SendGridMailSystem implements MailSystemInterface {
     // Build the Sendgrid mail object.
     // The message MODULE and ID is used for the Category. Category is the only
     // thing in the Sendgrid UI you can use to sort mail.
-    $sitename =  variable_get('site_name');
+
     // This is an array of categories for Sendgrid statistics.
     $categories = array(
       $sitename,
@@ -93,27 +80,31 @@ class SendGridMailSystem implements MailSystemInterface {
     $sendgrid_message
       ->setFrom($data['from'])
       ->setFromName($data['fromname'])
-      ->setSubject($data['subject'])
-      ->setCategories($categories)
-      ->setUniqueArgs($unique_args);
+      ->setSubject($message['subject']);
+//      ->setCategories($categories)
+  //    ->setUniqueArgs($unique_args);
 
-    // If we have a To name we use it.
-    if (!empty($data['toname'])) {
-      $sendgrid_message->addTo($data['to'], $data['toname']);
+    // If there are multiple recipients we use a different method for To:
+    if (strpos(',', $message['to'])) {
+      $sendtosarry = explode(',', $message['to']);
+      $firsttoaddress = sendgrid_integration_parse_address(array_shift($sendtosarry));
+      $sendgrid_message->addTo($firsttoaddress[0]);
+      $sendgrid_message->addToName($firsttoaddress[1]);
+      $sendgrid_message->setSmtpapiTos($sendtosarry);
     }
     else {
-      $sendgrid_message->addTo($data['to']);
+      $toaddrarray = sendgrid_integration_parse_address($message['to']);
+      $sendgrid_message->addTo($toaddrarray[0]);
+      $sendgrid_message->addToName($toaddrarray[1]);
     }
-
     // Check Content-Type of message body.
-    if (strpos($message['headers']['Content-Type'], 'text/plain') !== FALSE) {
+    if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
+      $sendgrid_message->setHtml($message['body']);
+    }
+    else {
       // Message body is text/plain.
       $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
     }
-    else {
-      $sendgrid_message->setHtml($message['body']);
-    }
-
     // Lets try and send the message and catch the error.
     try {
       $response = $sendgrid->send($sendgrid_message);
@@ -147,7 +138,7 @@ class SendGridMailSystem implements MailSystemInterface {
     // @TODO Old method to remove.
 
     // Creating hook, allowing other modules react on sent email.
-    module_invoke_all('sendgrid_integration_sent', $message['to'], $response_code, $smtp_api['unique_args'], $response);
+    module_invoke_all('sendgrid_integration_sent', $message['to'], $response_code, $unique_args, $response);
 
     if ($response_code = 200) {
       // If the code is 200 we are good to finish and proceed.
