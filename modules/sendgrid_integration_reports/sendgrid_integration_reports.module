@@ -2,15 +2,16 @@
 
 /**
  * @file sendgrid_integration_reports.module
- * TODO: Enter file description here.
+ * Sendrid Reporst Module
  */
+
 
 /**
  * Implements hook_menu().
  */
 function sendgrid_integration_reports_menu() {
   $items = array();
-  
+
   $items['admin/config/sendgrid_integration_reports'] = array(
     'title' => 'Administer Sendgrid Integration Reports',
     'page callback' => 'drupal_get_form',
@@ -18,7 +19,7 @@ function sendgrid_integration_reports_menu() {
     'access arguments' => array('administer sendgrid_integration_reports'),
   );
   $items['admin/reports/sendgrid'] = array(
-    'title' => 'myPage',
+    'title' => 'Sendgrid Reports Dashboard',
     'page callback' => 'example_page',
     'page arguments' => array(),
     'access arguments' => array('access content'),
@@ -30,29 +31,97 @@ function sendgrid_integration_reports_menu() {
  * Form builder.
  */
 function sendgrid_integration_reports_settings_form($form, &$form_state) {
-  $form['sendgrid_integration_reports_variable_foo'] = array(
+  $form['sendgrid_integration_reports_start_date'] = array(
     '#type' => 'textfield',
     '#title' => t('Foo'),
     '#default_value' => variable_get('sendgrid_integration_reports_variable_foo', 42),
     '#required' => TRUE,
   );
-  
-  // TODO! You probably don't need validation or submit handlers if using system_settings_form().
+  $form['sendgrid_integration_reports_start_date'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Foo'),
+    '#default_value' => variable_get('sendgrid_integration_reports_variable_foo', 42),
+    '#required' => TRUE,
+  );
+  $form['sendgrid_integration_reports_start_date'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Foo'),
+    '#default_value' => variable_get('sendgrid_integration_reports_variable_foo', 42),
+    '#required' => TRUE,
+  );
   return system_settings_form($form);
 }
 
 /**
- * Form validate handler.
+ * Implements hook_flush_caches().
  */
-function sendgrid_integration_reports_settings_form_validate($form, &$form_state) {
-  if ($form_state['values']['element'] != 'hello') {
-    form_set_error('element', t('Please say hello?'));
-  }
+function sendgrid_integration_reports_flush_caches() {
+  return array('cache_sendgrid_integration_reports');
 }
 
 /**
- * Form submit handler.
+ * Function to retrieve stats and store them in cache.
+ *
+ * return array
  */
-function sendgrid_integration_reports_settings_form_submit($form, &$form_state) {
 
+function sendgrid_integration_reports_get_stats() {
+  if ($cache = cache_get('sendgrid_reports_global', 'cache_sendgrid_integration_reports')) {
+    return $cache->data;
+  }
+  // Load key from variables and throw errors if not there.
+  $key_secret = variable_get('sendgrid_integration_apikey', '');
+  if (empty($key_secret)) {
+    watchdog('sendgrid_integration_reports', t('Sendgrid Module is not setup with API key.'), array(), 'WATCHDOG_NOTICE', NULL);
+    drupal_set_message(t('Sengrid Module is not setup with an API key.'), 'warning', TRUE);
+    return FALSE;
+  }
+
+  // Set headers and create a Guzzle client to communicate with Sendgrid.
+  $headers['Authorization'] = 'Bearer' . ' ' . $key_secret;
+  $clienttest = new GuzzleHttp\Client(
+    [
+      'base_uri' => 'https://api.sendgrid.com/v3/',
+      'headers' => $headers,
+    ]
+  );
+
+  // Set start date and end date for global stats - default 30 days back.
+  $start_date = variable_get('sendgrid_integration_reports_start_date', date('Y-m-d', strtotime('today - 30 days')));
+  // Set the end date which defaults to today
+  $end_date = variable_get('sendgrid_integration_reports_end_date', date('Y-m-d', strtotime('today')));
+  // Set aggregation of stats - default day.
+  $aggregated_by = variable_get('sendgrid_integration_reports_aggregated_by', 'day');
+  $query = array(
+    'start_date' => $start_date,
+    'end_date' => $end_date,
+    'aggregated_by' => $aggregated_by,
+  );
+  // Lets attempt the request and catch an error if it fails.
+  try {
+    $response = $clienttest->get('stats', ['query' => $query]);
+  }
+  catch (GuzzleHttp\Exception\ClientException $e) {
+    $code = filter_xss($e->getCode());
+    watchdog('sendgrid_integration_reports', t('Sendgrid Reports module faield to recieve data. HTTP Error Code @errno'), array('@errno' => $e), 'WATCHDOG_ERROR', NULL);
+    drupal_set_message(t('Sendgrid Reports module faield to recieve data. See logs.'), 'error', TRUE);
+    return FALSE;
+  }
+  // Sanitize return before using in Drupal.
+  $body = filter_xss($response->getBody());
+  $statsdata = json_decode($body);
+  $data = array();
+  foreach ($statsdata as $item) {
+    $data[$item->date] = array(
+      'opens' => $item->stats[0]->metrics->opens,
+      'clicks' => $item->stats[0]->metrics->clicks,
+      'spam' => $item->stats[0]->metrics->spam_reports,
+      'bounces' => $item->stats[0]->metrics->bounces,
+      'delivered' => $item->stats[0]->metrics->delivered,
+    );
+  }
+
+
+  cache_set('sendgrid_reports_global', $data, 'cache_sendgrid_integration_reports', CACHE_TEMPORARY);
+  return $data;
 }
