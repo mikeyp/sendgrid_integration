@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * @file sendgrid_integration_reports.module
+ * TODO: Enter file description here.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function sendgrid_integration_reports_menu() {
+  $items = array();
+  
+  $items['admin/config/sendgrid_integration_reports'] = array(
+    'title' => 'Administer Sendgrid Integration Reports',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sendgrid_integration_reports_settings_form'),
+    'access arguments' => array('administer sendgrid_integration_reports'),
+  );
+  $items['admin/reports/sendgrid'] = array(
+    'title' => 'myPage',
+    'page callback' => 'example_page',
+    'page arguments' => array(),
+    'access arguments' => array('access content'),
+  );
+  return $items;
+}
+
+/**
+ * Form builder.
+ */
+function sendgrid_integration_reports_settings_form($form, &$form_state) {
+  $form['sendgrid_integration_reports_variable_foo'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Foo'),
+    '#default_value' => variable_get('sendgrid_integration_reports_variable_foo', 42),
+    '#required' => TRUE,
+  );
+  
+  // TODO! You probably don't need validation or submit handlers if using system_settings_form().
+  return system_settings_form($form);
+}
+
+/**
+ * Form validate handler.
+ */
+function sendgrid_integration_reports_settings_form_validate($form, &$form_state) {
+  if ($form_state['values']['element'] != 'hello') {
+    form_set_error('element', t('Please say hello?'));
+  }
+}
+
+/**
+ * Form submit handler.
+ */
+function sendgrid_integration_reports_settings_form_submit($form, &$form_state) {
+
+}
