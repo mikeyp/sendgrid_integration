@@ -12,19 +12,44 @@
 function sendgrid_integration_reports_menu() {
   $items = array();
 
-  $items['admin/config/sendgrid_integration_reports'] = array(
+  $items['admin/config/services/sendgrid/reports'] = array(
     'title' => 'Administer Sendgrid Integration Reports',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('sendgrid_integration_reports_settings_form'),
-    'access arguments' => array('administer sendgrid_integration_reports'),
+    'access callback' => 'sendgrid_integration_reports_gatekeeper',
+    'type' => MENU_LOCAL_TASK,
   );
   $items['admin/reports/sendgrid'] = array(
     'title' => 'Sendgrid Reports Dashboard',
-    'page callback' => 'example_page',
+    'page callback' => 'sendgrid_integration_reports_global',
     'page arguments' => array(),
-    'access arguments' => array('access content'),
+    'access arguments' => array('access site reports'),
+    'file' => 'sendgrid_integration_reports.pages.inc',
   );
   return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function sendgrid_integration_reports_permission() {
+  return array(
+    'administer sendgrid integration reports' => array(
+      'title' => t('Administer Sendgrid Reports'),
+      'description' => t('Perform adminstration functions on the Sendgrid Reports module.'),
+    )
+  );
+}
+
+/**
+ * Access callback for module.
+ * @return BOOL
+ */
+function sendgrid_integration_reports_gatekeeper() {
+  if (user_access('administer sendgrid integration reports') || user_access('administer modules')) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
@@ -33,23 +58,55 @@ function sendgrid_integration_reports_menu() {
 function sendgrid_integration_reports_settings_form($form, &$form_state) {
   $form['sendgrid_integration_reports_start_date'] = array(
     '#type' => 'textfield',
-    '#title' => t('Foo'),
-    '#default_value' => variable_get('sendgrid_integration_reports_variable_foo', 42),
-    '#required' => TRUE,
+    '#title' => t('Global Stats Start Date'),
+    '#default_value' => variable_get('sendgrid_integration_reports_start_date', date('Y-m-d', strtotime('today - 30 days'))),
+    '#required' => FALSE,
+    '#description' => t('Start date in the format of YYYY-mm-dd. Defaults to 30 days back.'),
   );
-  $form['sendgrid_integration_reports_start_date'] = array(
+  $form['sendgrid_integration_reports_end_date'] = array(
     '#type' => 'textfield',
-    '#title' => t('Foo'),
-    '#default_value' => variable_get('sendgrid_integration_reports_variable_foo', 42),
-    '#required' => TRUE,
+    '#title' => t('Global Stats End Date'),
+    '#default_value' => variable_get('sendgrid_integration_reports_end_date', date('Y-m-d')),
+    '#required' => FALSE,
+    '#description' => t('End date in the format of YYYY-mm-dd. Defaults to today.'),
   );
-  $form['sendgrid_integration_reports_start_date'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Foo'),
-    '#default_value' => variable_get('sendgrid_integration_reports_variable_foo', 42),
-    '#required' => TRUE,
+  $form['sendgrid_integration_reports_aggregated_by'] = array(
+    '#type' => 'select',
+    '#title' => t('Global Stats Agreggation'),
+    '#default_value' => variable_get('sendgrid_integration_reports_aggregated_by', 0),
+    '#required' => FALSE,
+    '#description' => t('Aggregation of data. Defaults to day.'),
+    '#options' => array(
+      0 => 'day',
+      1 => 'week',
+      3 => 'month',
+    ),
   );
+  //$form['#validate'][] = 'sendgrid_integration_reports_settings_validate';
   return system_settings_form($form);
+}
+
+/**
+ * Implements hook_validate().
+ * Validates the system settings form for module.
+ *
+ * @param $form
+ * @param $form_state
+ * @return BOOL
+ */
+function sendgrid_integration_reports_settings_form_validate($form, &$form_state) {
+  $sdate = $form_state['values']['sendgrid_integration_reports_start_date'];
+  $edate = $form_state['values']['sendgrid_integration_reports_end_date'];
+  $date_regex = '/^(19|20)\d\d[\-\/.](0[1-9]|1[012])[\-\/.](0[1-9]|[12][0-9]|3[01])$/';
+
+  if (!preg_match($date_regex, $sdate)) {
+    form_set_error('sendgrid_integration_reports_start_date', t('This is not a valid start date. Date must be in the format YYYY-mm-dd.'));
+    return FALSE;
+  }
+  if (!preg_match($date_regex, $edate)) {
+    form_set_error('sendgrid_integration_reports_end_date', t('This is not a valid start date. Date must be in the format YYYY-mm-dd.'));
+    return FALSE;
+  }
 }
 
 /**
@@ -91,7 +148,21 @@ function sendgrid_integration_reports_get_stats() {
   // Set the end date which defaults to today
   $end_date = variable_get('sendgrid_integration_reports_end_date', date('Y-m-d', strtotime('today')));
   // Set aggregation of stats - default day.
-  $aggregated_by = variable_get('sendgrid_integration_reports_aggregated_by', 'day');
+  $aggregate = variable_get('sendgrid_integration_reports_aggregated_by', 0);
+  switch ($aggregate) {
+    case 0:
+      $aggregated_by = 'day';
+      break;
+
+    case 1:
+      $aggregated_by = 'week';
+      break;
+
+    case 2:
+      $aggregated_by = 'month';
+      break;
+  }
+
   $query = array(
     'start_date' => $start_date,
     'end_date' => $end_date,
@@ -112,16 +183,13 @@ function sendgrid_integration_reports_get_stats() {
   $statsdata = json_decode($body);
   $data = array();
   foreach ($statsdata as $item) {
-    $data[$item->date] = array(
+    $data['global']['volume'][] = array(
+      'date' => $item->date,
       'opens' => $item->stats[0]->metrics->opens,
       'clicks' => $item->stats[0]->metrics->clicks,
-      'spam' => $item->stats[0]->metrics->spam_reports,
-      'bounces' => $item->stats[0]->metrics->bounces,
       'delivered' => $item->stats[0]->metrics->delivered,
     );
   }
-
-
   cache_set('sendgrid_reports_global', $data, 'cache_sendgrid_integration_reports', CACHE_TEMPORARY);
   return $data;
 }
