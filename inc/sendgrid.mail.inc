@@ -99,6 +99,37 @@ class SendGridMailSystem implements MailSystemInterface {
       $sendgrid_message->addTo($toaddrarray[0]);
       $sendgrid_message->addToName($toaddrarray[1]);
     }
+
+    //Add cc and bcc in mail if they exist.
+    $cc_bcc_keys = array('cc', 'bcc');
+    $address_cc_bcc = array();
+    foreach ($message['headers'] as $key => $value) {
+      // handle latter case issue for cc and bcc key
+      if (in_array(drupal_strtolower($key), $cc_bcc_keys)) {
+        $mail_ids = explode(',', $value);
+        foreach ($mail_ids as $mail_id) {
+          list($mail_cc_address, $cc_name) = sendgrid_integration_parse_address($mail_id);
+          $address_cc_bcc[drupal_strtolower($key)][] = array(
+            'mail' => $mail_cc_address,
+            'name' => $cc_name,
+          );
+        }
+      }
+    }
+    if (array_key_exists($address_cc_bcc, 'cc')) {
+      foreach ($address_cc_bcc['cc'] as $item) {
+        $sendgrid_message->addCc($item['mail']);
+        $sendgrid_message->addCcName($item['name']);
+      }
+    }
+    if (array_key_exists($address_cc_bcc, 'bcc')) {
+      foreach ($address_cc_bcc['bcc'] as $item) {
+        $sendgrid_message->addBcc($item['mail']);
+        $sendgrid_message->addBccName($item['name']);
+      }
+    }
+
+
     // Check Content-Type of message body.
     if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
       $sendgrid_message->setHtml($message['body']);
