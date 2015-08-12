@@ -11,7 +11,7 @@
 function sendgrid_integration_reports_global() {
   $stats = sendgrid_integration_reports_get_stats();
   $settings = array();
-  foreach ($stats['global']['volume'] as $items) {
+  foreach ($stats['global'] as $items) {
     $settings['sendgrid_integration_reports']['global'][] = array(
       'date' => $items['date'],
       'opens' => $items['opens'],
@@ -36,9 +36,9 @@ function sendgrid_integration_reports_global() {
     ),
     'message' => array(
       '#markup' => t(
-        'The following reports are based on Mandrill data from the last 30 days. For more comprehensive data, please visit your !dashboard. !cache to ensure the data is current.',
+        'The following reports are the from the Global Statistics provided by Sendgrid. For more comprehensive data, please visit your !dashboard. !cache to ensure the data is current.',
         array(
-          '!dashboard' => l(t('Mandrill Dashboard'), 'https://mandrillapp.com/'),
+          '!dashboard' => l(t('Sendgrid Dashboard'), 'https://app.sengrid.com/'),
           '!cache' => l(t('Clear your cache'), 'admin/config/development/performance'),
         )
       ),
@@ -46,6 +46,10 @@ function sendgrid_integration_reports_global() {
     'volume' => array(
       '#prefix' => '<h2>' . t('Sending Volume') . '</h2>',
       '#markup' => '<div id="sendgrid-global-volume-chart"></div>',
+    ),
+    'spam' => array(
+      '#prefix' => '<h2>' . t('Spam Reports') . '</h2>',
+      '#markup' => '<div id="sendgrid-global-spam-chart"></div>',
     ),
   );
 
