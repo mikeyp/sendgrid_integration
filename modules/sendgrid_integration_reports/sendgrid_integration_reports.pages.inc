@@ -9,7 +9,7 @@
  * Global stats page.
  */
 function sendgrid_integration_reports_global() {
-  $stats = sendgrid_integration_reports_get_stats();
+  $stats = sendgrid_integration_reports_get_stats_global();
   $settings = array();
   foreach ($stats['global'] as $items) {
     $settings['sendgrid_integration_reports']['global'][] = array(
