@@ -14,16 +14,24 @@ define('SENDGRID_INTEGRATION_EMAIL_REGEX', '/^\s*(.+?)\s*<\s*([^>]+)\s*>$/');
  */
 function sendgrid_integration_menu() {
   $items = array();
-
   $items['admin/config/services/sendgrid'] = array(
-    'title' => 'SendGrid settings',
-    'description' => 'SendGrid Integration settings',
+    'title' => 'SendGrid Settings',
+    'description' => 'SendGrid Integration Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('sendgrid_integration_admin'),
     'access callback' => 'user_access',
     'access arguments' => array('administer sendgrid settings'),
   );
-
+  $items['admin/config/services/sendgrid/test'] = array(
+    'title' => 'SendGrid Test Email Send',
+    'description' => 'Send a test email through sendgrid.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sendgrid_integration_test'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer sendgrid settings'),
+    'file' => 'sendgrid_integration.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
   return $items;
 }
 
@@ -189,6 +197,19 @@ function sendgrid_integration_parse_address($email) {
     return array($matches[2], $matches[1]);
   }
   else {
-    return array($email, '');
+    return array($email, ' ');
   }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function sendgrid_integration_mail($key, &$message, $params) {
+  $message['module'] = 'sendgrid_integration';
+  $message['key'] = $key;
+  $message['subject'] = $params['subject'];
+  $message['body'] = explode(
+    MAIL_LINE_ENDINGS . MAIL_LINE_ENDINGS,
+    $params['body']
+  );
 }
