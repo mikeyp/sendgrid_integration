@@ -80,17 +80,19 @@ class SendGridMailSystem implements MailSystemInterface {
     $sendgrid_message
       ->setFrom($data['from'])
       ->setFromName($data['fromname'])
-      ->setSubject($message['subject']);
-//      ->setCategories($categories)
-  //    ->setUniqueArgs($unique_args);
+      ->setSubject($message['subject'])
+      ->setCategories($categories)
+      ->setUniqueArgs($unique_args);
 
     // If there are multiple recipients we use a different method for To:
     if (strpos(',', $message['to'])) {
       $sendtosarry = explode(',', $message['to']);
-      $firsttoaddress = sendgrid_integration_parse_address(array_shift($sendtosarry));
-      $sendgrid_message->addTo($firsttoaddress[0]);
-      $sendgrid_message->addToName($firsttoaddress[1]);
-      $sendgrid_message->setSmtpapiTos($sendtosarry);
+      foreach ($sendtosarry as $item) {
+        $firsttoaddress = sendgrid_integration_parse_address(array_shift($item));
+        $sendgrid_message->addTo($firsttoaddress[0]);
+        $sendgrid_message->addToName($firsttoaddress[1]);
+        $sendgrid_message->setSmtpapiTos($sendtosarry);
+      }
     }
     else {
       $toaddrarray = sendgrid_integration_parse_address($message['to']);
