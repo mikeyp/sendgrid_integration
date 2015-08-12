@@ -56,6 +56,14 @@ function sendgrid_integration_reports_gatekeeper() {
  * Form builder.
  */
 function sendgrid_integration_reports_settings_form($form, &$form_state) {
+  $form['message'] = array(
+    '#markup' => t(
+      'Data and responses from Sendgrid are cached for performance reasons. If you make changes to these settings, you must !cache in order to load new charts.',
+      array(
+        '!cache' => l(t('clear your cache'), 'admin/config/development/performance'),
+      )
+    ),
+  );
   $form['sendgrid_integration_reports_start_date'] = array(
     '#type' => 'textfield',
     '#title' => t('Global Stats Start Date'),
@@ -82,7 +90,6 @@ function sendgrid_integration_reports_settings_form($form, &$form_state) {
       3 => 'month',
     ),
   );
-  //$form['#validate'][] = 'sendgrid_integration_reports_settings_validate';
   return system_settings_form($form);
 }
 
@@ -183,12 +190,49 @@ function sendgrid_integration_reports_get_stats() {
   $statsdata = json_decode($body);
   $data = array();
   foreach ($statsdata as $item) {
-    $data['global']['volume'][] = array(
+    $data['global'][] = array(
       'date' => $item->date,
       'opens' => $item->stats[0]->metrics->opens,
+      'processed' => $item->stats[0]->metrics->processed,
+      'requests' => $item->stats[0]->metrics->requests,
       'clicks' => $item->stats[0]->metrics->clicks,
       'delivered' => $item->stats[0]->metrics->delivered,
+      'deferred' => $item->stats[0]->metrics->deferred,
+      'unsubscribes' => $item->stats[0]->metrics->unsubscribes,
+      'unsubscribe_drops' => $item->stats[0]->metrics->unsubscribe_drops,
+      'invalid_emails' => $item->stats[0]->metrics->invalid_emails,
+      'bounces' => $item->stats[0]->metrics->bounces,
+      'bounce_drops' => $item->stats[0]->metrics->bounce_drops,
+      'unique_clicks' => $item->stats[0]->metrics->unique_clicks,
+      'blocks' => $item->stats[0]->metrics->blocks,
+      'spam_report_drops' => $item->stats[0]->metrics->spam_report_drops,
+      'spam_reports' => $item->stats[0]->metrics->spam_reports,
+      'unique_opens' => $item->stats[0]->metrics->unique_opens,
     );
+  }
+  // Browser statistics.
+  try {
+    $response = $clienttest->get('browsers/stats', ['query' => $query]);
+  }
+  catch (GuzzleHttp\Exception\ClientException $e) {
+    $code = filter_xss($e->getCode());
+    watchdog('sendgrid_integration_reports', t('Sendgrid Reports module faield to recieve data. HTTP Error Code @errno'), array('@errno' => $e), 'WATCHDOG_ERROR', NULL);
+    drupal_set_message(t('Sendgrid Reports module faield to recieve data. See logs.'), 'error', TRUE);
+    return FALSE;
+  }
+  // Sanitize return before using in Drupal.
+  $body = $response->getBody();
+  $statsdata = json_decode($body);
+  // Determine all browsers. Nested foreach to iterate over the entire return.
+  foreach ($statsdata as $item) {
+    foreach ($item->stats as $inneritem) {
+      if (array_key_exists($inneritem->name, $data['browser'])) {
+        $data['browser'][$inneritem->name] += $inneritem->metrics->clicks;
+      }
+      else {
+        $data['browser'][$inneritem->name] = $inneritem->metrics->clicks;
+      }
+    }
   }
   cache_set('sendgrid_reports_global', $data, 'cache_sendgrid_integration_reports', CACHE_TEMPORARY);
   return $data;
