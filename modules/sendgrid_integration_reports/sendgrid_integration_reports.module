@@ -215,6 +215,10 @@ function sendgrid_integration_reports_get_stats_global() {
   return $data;
 }
 
+/**
+ * Function to retrieve browser stats.
+ * @return array
+ */
 function sendgrid_integration_reports_get_stats_browser() {
   if ($cache = cache_get('sendgrid_reports_browsers', 'cache_sendgrid_integration_reports')) {
     return $cache->data;
