@@ -7,6 +7,7 @@
 
 /**
  * Global stats page.
+ * @return array
  */
 function sendgrid_integration_reports_global() {
   $stats = sendgrid_integration_reports_get_stats_global();
@@ -17,6 +18,8 @@ function sendgrid_integration_reports_global() {
       'opens' => $items['opens'],
       'clicks' => $items['clicks'],
       'delivered' => $items['delivered'],
+      'spam_reports' => $items['spam_reports'],
+      'spam_report_drops' => $items['spam_report_drops'],
     );
   }
   $path = drupal_get_path('module', 'sendgrid_integration_reports');
@@ -52,7 +55,25 @@ function sendgrid_integration_reports_global() {
       '#markup' => '<div id="sendgrid-global-spam-chart"></div>',
     ),
   );
+  $browserstats = sendgrid_integration_reports_get_stats_browser();
+  $rows = array();
+  foreach ($browserstats as $key => $value) {
+    $rows[] = array(
+      $key,
+      $value
+    );
+  }
+  $header = array(
+    t('Browser'),
+    t('Click Count'),
+  );
+  $render['browsers'] = array(
+    '#prefix' => '<h2>' . t('Browser Statistics') . '</h2>',
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    'attributes' => array('width' => '75%')
+  );
 
   return $render;
 }
-
