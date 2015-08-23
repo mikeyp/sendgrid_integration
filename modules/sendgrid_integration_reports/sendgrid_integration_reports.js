@@ -19,7 +19,8 @@
 
         var dataTableSpa = new google.visualization.DataTable();
         dataTableSpa.addColumn('datetime', Drupal.t('Date'));
-        dataTableSpa.addColumn('number'), Drupal.t('Spam');
+        dataTableSpa.addColumn('number', Drupal.t('Spam'));
+        dataTableSpa.addColumn('number', Drupal.t('Spam Drops'));
 
         for (var key in settings.sendgrid_integration_reports.global) {
           dataTableVol.addRow([
@@ -30,13 +31,15 @@
           ]);
           dataTableSpa.addRow([
             new Date(settings.sendgrid_integration_reports.global[key]['date']),
-            settings.sendgrid_integration_reports.global[key]['spam_reports']
+            settings.sendgrid_integration_reports.global[key]['spam_reports'],
+            settings.sendgrid_integration_reports.global[key]['spam_report_drops']
           ]);
         }
 
         var options = {
           pointSize: 5,
-          hAxis: {format: 'y/MM/dd'}
+          hAxis: {format: 'y/MM/dd'},
+          legend: {position: 'bottom'}
         };
 
         var chart0 = new google.visualization.LineChart(document.getElementById('sendgrid-global-volume-chart'));
@@ -47,6 +50,4 @@
       }
     }
   }
-
-
 })(jQuery);
