@@ -63,15 +63,35 @@ function sendgrid_integration_reports_global() {
       $value
     );
   }
-  $header = array(
+  $headerbrowser = array(
     t('Browser'),
     t('Click Count'),
   );
   $render['browsers'] = array(
     '#prefix' => '<h2>' . t('Browser Statistics') . '</h2>',
     '#theme' => 'table',
-    '#header' => $header,
+    '#header' => $headerbrowser,
     '#rows' => $rows,
+    'attributes' => array('width' => '75%')
+  );
+
+  $devicestats = sendgrid_integration_reports_get_stats_devices();
+  $rowsdevices = array();
+  foreach ($devicestats as $key => $value) {
+    $rowsdevices[] = array(
+      $key,
+      $value
+    );
+  }
+  $headerdevices = array(
+    t('Device'),
+    t('Open Count'),
+  );
+  $render['devices'] = array(
+    '#prefix' => '<h2>' . t('Device Statistics') . '</h2>',
+    '#theme' => 'table',
+    '#header' => $headerdevices,
+    '#rows' => $rowsdevices,
     'attributes' => array('width' => '75%')
   );
 
