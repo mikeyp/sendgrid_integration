@@ -104,6 +104,13 @@ function sendgrid_integration_reports_settings_form($form, &$form_state) {
 function sendgrid_integration_reports_settings_form_validate($form, &$form_state) {
   $sdate = $form_state['values']['sendgrid_integration_reports_start_date'];
   $edate = $form_state['values']['sendgrid_integration_reports_end_date'];
+  // If both are empty then we are using defaults.
+  if (empty($edate) && empty($sdate)) {
+    variable_del('sendgrid_integration_reports_start_date');
+    variable_del('sendgrid_integration_reports_end_date');
+    drupal_set_message(t('Using default settings for dates.'), 'status', TRUE);
+    return TRUE;
+  }
   $date_regex = '/^(19|20)\d\d[\-\/.](0[1-9]|1[012])[\-\/.](0[1-9]|[12][0-9]|3[01])$/';
 
   if (!preg_match($date_regex, $sdate)) {
@@ -151,9 +158,9 @@ function sendgrid_integration_reports_get_stats_global() {
   );
 
   // Set start date and end date for global stats - default 30 days back.
-  $start_date = variable_get('sendgrid_integration_reports_start_date', date('Y-m-d', strtotime('today - 30 days')));
+  $start_date = empty(variable_get('sendgrid_integration_reports_start_date')) ? date('Y-m-d', strtotime('today - 30 days')) : variable_get('sendgrid_integration_reports_start_date');
   // Set the end date which defaults to today
-  $end_date = variable_get('sendgrid_integration_reports_end_date', date('Y-m-d', strtotime('today')));
+  $end_date = empty(variable_get('sendgrid_integration_reports_end_date')) ? date('Y-m-d', strtotime('today')) : variable_get('sendgrid_integration_reports_end_date');
   // Set aggregation of stats - default day.
   $aggregate = variable_get('sendgrid_integration_reports_aggregated_by', 0);
   switch ($aggregate) {
@@ -272,7 +279,7 @@ function sendgrid_integration_reports_get_stats_browser() {
   }
   catch (GuzzleHttp\Exception\ClientException $e) {
     $code = filter_xss($e->getCode());
-    watchdog('sendgrid_integration_reports', t('Sendgrid Reports module faield to recieve data. HTTP Error Code @errno'), array('@errno' => $e), 'WATCHDOG_ERROR', NULL);
+    watchdog('sendgrid_integration_reports', t('Sendgrid Reports module faield to recieve data. HTTP Error Code @errno'), array('@errno' => $code), 'WATCHDOG_ERROR', NULL);
     drupal_set_message(t('Sendgrid Reports module faield to recieve data. See logs.'), 'error', TRUE);
     return FALSE;
   }
