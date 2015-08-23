@@ -248,9 +248,9 @@ function sendgrid_integration_reports_get_stats_browser() {
   );
 
   // Set start date and end date for global stats - default 30 days back.
-  $start_date = variable_get('sendgrid_integration_reports_start_date', date('Y-m-d', strtotime('today - 30 days')));
+  $start_date = empty(variable_get('sendgrid_integration_reports_start_date')) ? date('Y-m-d', strtotime('today - 30 days')) : variable_get('sendgrid_integration_reports_start_date');
   // Set the end date which defaults to today
-  $end_date = variable_get('sendgrid_integration_reports_end_date', date('Y-m-d', strtotime('today')));
+  $end_date = empty(variable_get('sendgrid_integration_reports_end_date')) ? date('Y-m-d', strtotime('today')) : variable_get('sendgrid_integration_reports_end_date');
   // Set aggregation of stats - default day.
   $aggregate = variable_get('sendgrid_integration_reports_aggregated_by', 0);
   switch ($aggregate) {
@@ -300,5 +300,86 @@ function sendgrid_integration_reports_get_stats_browser() {
   }
 
   cache_set('sendgrid_reports_browsers', $data, 'cache_sendgrid_integration_reports', CACHE_TEMPORARY);
+  return $data;
+}
+
+/**
+ * Function to retrieve device stats.
+ * @return array
+ */
+function sendgrid_integration_reports_get_stats_devices() {
+  if ($cache = cache_get('sendgrid_reports_devices', 'cache_sendgrid_integration_reports')) {
+    return $cache->data;
+  }
+  // Load key from variables and throw errors if not there.
+  $key_secret = variable_get('sendgrid_integration_apikey', '');
+  if (empty($key_secret)) {
+    watchdog('sendgrid_integration_reports', t('Sendgrid Module is not setup with API key.'), array(), 'WATCHDOG_NOTICE', NULL);
+    drupal_set_message(t('Sengrid Module is not setup with an API key.'), 'warning', TRUE);
+    return FALSE;
+  }
+
+  // Set headers and create a Guzzle client to communicate with Sendgrid.
+  $headers['Authorization'] = 'Bearer' . ' ' . $key_secret;
+  $clienttest = new GuzzleHttp\Client(
+    [
+      'base_uri' => 'https://api.sendgrid.com/v3/',
+      'headers' => $headers,
+    ]
+  );
+
+  // Set start date and end date for global stats - default 30 days back.
+  $start_date = empty(variable_get('sendgrid_integration_reports_start_date')) ? date('Y-m-d', strtotime('today - 30 days')) : variable_get('sendgrid_integration_reports_start_date');
+  // Set the end date which defaults to today
+  $end_date = empty(variable_get('sendgrid_integration_reports_end_date')) ? date('Y-m-d', strtotime('today')) : variable_get('sendgrid_integration_reports_end_date');
+  // Set aggregation of stats - default day.
+  $aggregate = variable_get('sendgrid_integration_reports_aggregated_by', 0);
+  switch ($aggregate) {
+    case 0:
+      $aggregated_by = 'day';
+      break;
+
+    case 1:
+      $aggregated_by = 'week';
+      break;
+
+    case 2:
+      $aggregated_by = 'month';
+      break;
+  }
+
+  $query = array(
+    'start_date' => $start_date,
+    'end_date' => $end_date,
+    'aggregated_by' => $aggregated_by,
+  );
+
+  // Lets try and retrieve the browser statistics.
+  try {
+    $response = $clienttest->get('devices/stats', ['query' => $query]);
+  }
+  catch (GuzzleHttp\Exception\ClientException $e) {
+    $code = filter_xss($e->getCode());
+    watchdog('sendgrid_integration_reports', t('Sendgrid Reports module faield to recieve data. HTTP Error Code @errno'), array('@errno' => $code), 'WATCHDOG_ERROR', NULL);
+    drupal_set_message(t('Sendgrid Reports module faield to recieve data. See logs.'), 'error', TRUE);
+    return FALSE;
+  }
+  // Sanitize return before using in Drupal.
+  $body = $response->getBody();
+  $statsdata = json_decode($body);
+  $data = array();
+  // Determine all browsers. Nested foreach to iterate over all data returned per aggregation.
+  foreach ($statsdata as $item) {
+    foreach ($item->stats as $inneritem) {
+      if (array_key_exists($inneritem->name, $data)) {
+        $data[$inneritem->name] += $inneritem->metrics->opens;
+      }
+      else {
+        $data[$inneritem->name] = $inneritem->metrics->opens;
+      }
+    }
+  }
+
+  cache_set('sendgrid_reports_devices', $data, 'cache_sendgrid_integration_reports', CACHE_TEMPORARY);
   return $data;
 }
