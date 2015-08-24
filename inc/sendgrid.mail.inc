@@ -116,13 +116,13 @@ class SendGridMailSystem implements MailSystemInterface {
         }
       }
     }
-    if (array_key_exists($address_cc_bcc, 'cc')) {
+    if (array_key_exists('cc', $address_cc_bcc)) {
       foreach ($address_cc_bcc['cc'] as $item) {
         $sendgrid_message->addCc($item['mail']);
         $sendgrid_message->addCcName($item['name']);
       }
     }
-    if (array_key_exists($address_cc_bcc, 'bcc')) {
+    if (array_key_exists('bcc', $address_cc_bcc)) {
       foreach ($address_cc_bcc['bcc'] as $item) {
         $sendgrid_message->addBcc($item['mail']);
         $sendgrid_message->addBccName($item['name']);
