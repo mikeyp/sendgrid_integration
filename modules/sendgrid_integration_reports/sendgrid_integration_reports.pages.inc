@@ -39,10 +39,11 @@ function sendgrid_integration_reports_global() {
     ),
     'message' => array(
       '#markup' => t(
-        'The following reports are the from the Global Statistics provided by Sendgrid. For more comprehensive data, please visit your !dashboard. !cache to ensure the data is current.',
+        'The following reports are the from the Global Statistics provided by Sendgrid. For more comprehensive data, please visit your !dashboard. !cache to ensure the data is current. !settings to alter the time frame of this data.',
         array(
           '!dashboard' => l(t('Sendgrid Dashboard'), 'https://app.sengrid.com/'),
           '!cache' => l(t('Clear your cache'), 'admin/config/development/performance'),
+          '!settings' => l(t('Change your settings'), 'admin/config/services/sendgrid/reports'),
         )
       ),
     ),
