@@ -1,9 +1,8 @@
 name = SendGrid Integration
-description = Provides sendgrid support
-
+description = Provides Sendgrid Integration for the Drupal Mail System
 core = 7.x
 package = Mail
-
 configure = admin/config/system/sendgrid
-
 files[] = inc/sendgrid.mail.inc
+dependencies[] = mailsystem (>=2.x)
+dependencies[] = composer_manager
