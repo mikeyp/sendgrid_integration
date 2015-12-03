@@ -77,6 +77,15 @@ class SendGridMailSystem implements MailSystemInterface {
       $message['module'],
       $message['id'],
     );
+
+    // Allow other modules to modify categories.
+    $result = module_invoke_all('sendgrid_integration_categories_alter', $message, $categories);
+
+    // Check if we got any variable back.
+    if (!empty($result)) {
+      $categories = $result;
+    }
+
     $sendgrid_message
       ->setFrom($data['from'])
       ->setFromName($data['fromname'])
