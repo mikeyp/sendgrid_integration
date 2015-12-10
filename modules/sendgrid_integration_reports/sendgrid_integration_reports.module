@@ -141,13 +141,41 @@ function sendgrid_integration_reports_flush_caches() {
 }
 
 /**
+ * Function to retrieve stats by categories.
+ *
+ * @return array
+ */
+function sendgrid_integration_reports_get_stats_categories($categories, $start_date = NULL, $end_date = NULL, $refresh = FALSE) {
+  $cache_id = 'sendgrid_reports_categories';
+
+  // Sanitize the categories array and generate the cache ID.
+  if ($categories && is_array($categories)) {
+    $categories = array_values($categories);
+    $cache_id .= '_' . implode('_', $categories);
+  } else {
+    $categories = NULL;
+  }
+
+  return sendgrid_integration_reports_get_stats($cache_id, $categories, $start_date, $end_date, $refresh);
+}
+
+/**
+ * Function to retrieve global stats.
+ *
+ * @return array
+ */
+function sendgrid_integration_reports_get_stats_global() {
+  return sendgrid_integration_reports_get_stats('sendgrid_reports_global');
+}
+
+/**
  * Function to retrieve stats and store them in cache.
  *
  * return array
  */
 
-function sendgrid_integration_reports_get_stats_global() {
-  if ($cache = cache_get('sendgrid_reports_global', 'cache_sendgrid_integration_reports')) {
+function sendgrid_integration_reports_get_stats($cache_id, $categories = array(), $start_date = NULL, $end_date = NULL, $refresh = FALSE) {
+  if (!$refresh && $cache = cache_get($cache_id, 'cache_sendgrid_integration_reports')) {
     return $cache->data;
   }
   // Load key from variables and throw errors if not there.
@@ -167,10 +195,20 @@ function sendgrid_integration_reports_get_stats_global() {
     ]
   );
 
-  // Set start date and end date for global stats - default 30 days back.
-  $start_date = empty(variable_get('sendgrid_integration_reports_start_date')) ? date('Y-m-d', strtotime('today - 30 days')) : variable_get('sendgrid_integration_reports_start_date');
-  // Set the end date which defaults to today
-  $end_date = empty(variable_get('sendgrid_integration_reports_end_date')) ? date('Y-m-d', strtotime('today')) : variable_get('sendgrid_integration_reports_end_date');
+  if ($start_date) {
+    $start_date = date('Y-m-d', strtotime($start_date));
+  } else {
+    // Set start date and end date for global stats - default 30 days back.
+    $start_date = empty(variable_get('sendgrid_integration_reports_start_date')) ? date('Y-m-d', strtotime('today - 30 days')) : variable_get('sendgrid_integration_reports_start_date');
+  }
+
+  if ($end_date) {
+    $end_date = date('Y-m-d', strtotime($end_date));
+  } else {
+    // Set the end date which defaults to today
+    $end_date = empty(variable_get('sendgrid_integration_reports_end_date')) ? date('Y-m-d', strtotime('today')) : variable_get('sendgrid_integration_reports_end_date');
+  }
+
   // Set aggregation of stats - default day.
   $aggregate = variable_get('sendgrid_integration_reports_aggregated_by', 0);
   switch ($aggregate) {
@@ -187,14 +225,21 @@ function sendgrid_integration_reports_get_stats_global() {
       break;
   }
 
+  $path = 'stats';
   $query = array(
     'start_date' => $start_date,
     'end_date' => $end_date,
     'aggregated_by' => $aggregated_by,
   );
+  if ($categories) {
+    $path = 'categories/stats';
+    $query['categories'] = $categories;
+    $query_str = http_build_query($query, null, '&', PHP_QUERY_RFC3986);
+    $query = preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $query_str);
+  }
   // Lets attempt the request and catch an error if it fails.
   try {
-    $response = $clienttest->get('stats', ['query' => $query]);
+    $response = $clienttest->get($path, ['query' => $query]);
   }
   catch (GuzzleHttp\Exception\ClientException $e) {
     $code = filter_xss($e->getCode());
@@ -228,7 +273,7 @@ function sendgrid_integration_reports_get_stats_global() {
     );
   }
 
-  cache_set('sendgrid_reports_global', $data, 'cache_sendgrid_integration_reports', CACHE_TEMPORARY);
+  cache_set($cache_id, $data, 'cache_sendgrid_integration_reports', CACHE_TEMPORARY);
   return $data;
 }
 
