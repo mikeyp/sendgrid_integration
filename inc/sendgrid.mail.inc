@@ -52,9 +52,7 @@ class SendGridMailSystem implements MailSystemInterface {
     }
 
     // Checking if 'from' email-address already exist.
-    if (isset($message['headers']['from']) || 
-        isset($message['headers']['From']) && 
-        $message['headers']['from'] = $message['headers']['From']) {
+    if (isset($message['headers']['from']) || isset($message['headers']['From']) && $message['headers']['from'] = $message['headers']['From']) {
       $fromaddrarray = sendgrid_integration_parse_address($message['headers']['from']);
       $data['from'] = $fromaddrarray[0];
       $data['fromname'] = $fromaddrarray[1];
