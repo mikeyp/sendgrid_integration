@@ -43,6 +43,10 @@ added to Cron Queue for later delivery. In order for this to function, you must
 configure Cron running period and when it is possible also add your drupal site
 to crontab (Linux only), read more about cron at https://www.drupal.org/cron.
 
+If you would like a record of the emails being sent by the website, installing
+Maillog (https://www.drupal.org/project/maillog) will allow you to store local
+copies of the emails sent. Sendgrid does not store the content of the email.
+
 RESOURCES
 --------------------------------------------------------------------------------
 Information about the Sendgrid PHP Library is availabe on Github:

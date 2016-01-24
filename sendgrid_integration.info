@@ -7,3 +7,6 @@ configure = admin/config/system/sendgrid
 files[] = inc/sendgrid.mail.inc
 dependencies[] = mailsystem (>=2.x)
 dependencies[] = composer_manager
+
+; For the tests the Maillog module is also required.
+test_dependencies[] = maillog
