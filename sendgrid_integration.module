@@ -87,7 +87,7 @@ function sendgrid_integration_admin() {
 
     $form['debugging']['maillog']['sendgrid_integration_maillog_log'] = array(
       '#type' => 'checkbox',
-      '#title' => t("Create table entries in maillog table for each e-mail."),
+      '#title' => t('Create table entries in maillog table for each e-mail.'),
       '#default_value' => variable_get('maillog_log', TRUE),
     );
 
