@@ -37,6 +37,8 @@ function sendgrid_integration_uninstall() {
   variable_del('sendgrid_integration_apikey_id');
   variable_del('sendgrid_integration_apikey');
   variable_del('sendgrid_integration_test_defaults');
+  variable_del('sendgrid_integration_maillog_log');
+  variable_del('sendgrid_integration_maillog_devel');
 }
 
 /**
