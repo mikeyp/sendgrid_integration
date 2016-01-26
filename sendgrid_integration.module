@@ -13,25 +13,25 @@ define('SENDGRID_INTEGRATION_EMAIL_REGEX', '/^\s*(.+?)\s*<\s*([^>]+)\s*>$/');
  * Implements hook_menu().
  */
 function sendgrid_integration_menu() {
-  $items = array();
-  $items['admin/config/services/sendgrid'] = array(
+  $items = [];
+  $items['admin/config/services/sendgrid'] = [
     'title' => 'SendGrid Settings',
     'description' => 'SendGrid Integration Settings',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('sendgrid_integration_admin'),
+    'page arguments' => ['sendgrid_integration_admin'],
     'access callback' => 'user_access',
-    'access arguments' => array('administer sendgrid settings'),
-  );
-  $items['admin/config/services/sendgrid/test'] = array(
+    'access arguments' => ['administer sendgrid settings'],
+  ];
+  $items['admin/config/services/sendgrid/test'] = [
     'title' => 'SendGrid Test Email Send',
     'description' => 'Send a test email through sendgrid.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('sendgrid_integration_test'),
+    'page arguments' => ['sendgrid_integration_test'],
     'access callback' => 'user_access',
-    'access arguments' => array('administer sendgrid settings'),
+    'access arguments' => ['administer sendgrid settings'],
     'file' => 'sendgrid_integration.admin.inc',
     'type' => MENU_LOCAL_TASK,
-  );
+  ];
   return $items;
 }
 
@@ -39,67 +39,110 @@ function sendgrid_integration_menu() {
  * Implements hook_permissions().
  */
 function sendgrid_integration_permission() {
-  return array(
-    'administer sendgrid settings' => array(
+  return [
+    'administer sendgrid settings' => [
       'title' => t('Administer SendGrid settings'),
       'description' => t('Configure SendGrid options like username and password'),
-    ),
-  );
+    ],
+  ];
 }
 
 /**
  * Provides Settings Form.
  */
 function sendgrid_integration_admin() {
-  $form = array();
+  $form = [];
 
-  $form['authentication'] = array(
+  $form['authentication'] = [
     '#type' => 'fieldset',
     '#title' => t('Authentication'),
-  );
+  ];
 
-  $form['authentication']['sendgrid_integration_apikey_id'] = array(
+  $form['authentication']['sendgrid_integration_apikey_id'] = [
     '#type' => 'textfield',
     '#title' => t('API Key ID'),
     '#description' => t('The ID of your key pair'),
     '#required' => TRUE,
     '#default_value' => variable_get('sendgrid_integration_apikey_id', ''),
-  );
+  ];
 
-  $form['authentication']['sendgrid_integration_apikey'] = array(
+  $form['authentication']['sendgrid_integration_apikey'] = [
     '#type' => 'password',
     '#title' => t('API Secret Key'),
-    '#description' => t('The secret key of your key pair. These are only generated once by Sendgrid.'),
-    '#required' => TRUE,
-    '#default_value' => variable_get('sendgrid_integration_apikey', ''),
-  );
+    '#description' => t('The secret key of your key pair. These are only generated once by Sendgrid. Your existing key is hidden. If you need to change this, provide a new key here.'),
+  ];
 
-  $form['debugging']['maillog'] = array(
+  $form['debugging']['maillog'] = [
     '#type' => 'fieldset',
     '#title' => t('Maillog integration'),
-  );
+  ];
+  $form['actions'] = ['#type' => 'actions'];
+  $form['actions']['submit'] = [
+    '#type' => 'submit',
+    '#value' => t('Save Settings'),
+    '#submit' => ['sendgrid_integration_admin_submit'],
+    '#validate' => [
+      'sendgrid_integration_admin_validate',
+    ],
+  ];
 
   if (!module_exists('maillog')) {
-    $form['debugging']['maillog']['#description'] = t('Installing the <a href="@url">Maillog module</a> also allows keeping copies of all emails sent through the site.', array('@url' => 'https://www.drupal.org/project/maillog'));
+    $form['debugging']['maillog']['#description'] = t('Installing the <a href="@url">Maillog module</a> also allows keeping copies of all emails sent through the site.', ['@url' => 'https://www.drupal.org/project/maillog']);
   }
   else {
-    $form['debugging']['maillog']['#description'] = t('The <a href="@url">Maillog module</a> is installed, it can also be used to keep copies of all emails sent through the site.', array('@url' => url('admin/config/development/maillog')));
+    $form['debugging']['maillog']['#description'] = t('The <a href="@url">Maillog module</a> is installed, it can also be used to keep copies of all emails sent through the site.', ['@url' => url('admin/config/development/maillog')]);
 
-    $form['debugging']['maillog']['sendgrid_integration_maillog_log'] = array(
+    $form['debugging']['maillog']['sendgrid_integration_maillog_log'] = [
       '#type' => 'checkbox',
       '#title' => t('Create table entries in maillog table for each e-mail.'),
-      '#default_value' => variable_get('maillog_log', TRUE),
-    );
+      '#default_value' => variable_get('sendgrid_integration_maillog_log', TRUE),
+    ];
 
-    $form['debugging']['maillog']['sendgrid_integration_maillog_devel'] = array(
+    $form['debugging']['maillog']['sendgrid_integration_maillog_devel'] = [
       '#type' => 'checkbox',
       '#title' => t("Display the e-mails on page using devel module (if enabled)."),
-      '#default_value' => variable_get('maillog_devel', TRUE),
+      '#default_value' => variable_get('sendgrid_integration_maillog_devel', TRUE),
       '#disabled' => !module_exists('devel'),
-    );
+    ];
   }
 
-  return system_settings_form($form);
+  return $form;
+}
+
+/**
+ * Validation function for admin settings.
+ * @param $form
+ * @param $form_state
+ */
+function sendgrid_integration_admin_validate($form, &$form_state) {
+  // Check for API secret key. If missing throw error.
+  if (empty(variable_get('sendgrid_integration_apikey', '')) && empty($form_state['values']['sendgrid_integration_apikey'])) {
+    form_set_error('sendgrid_integration_apikey', t('You have not stored an API Secret Key.'));
+  }
+}
+
+/**
+ * Submit handler for admin settings.
+ *
+ * We use a custom submit handler to only set variables if values are supplied
+ * in the UI.
+ * @param $form
+ * @param $form_state
+ */
+function sendgrid_integration_admin_submit($form, $form_state) {
+  if (!empty($form_state['values']['sendgrid_integration_apikey_id'])) {
+    variable_set('sendgrid_integration_apikey_id', check_plain($form_state['values']['sendgrid_integration_apikey_id']));
+  }
+
+  variable_set('sendgrid_integration_maillog_log', check_plain($form_state['values']['sendgrid_integration_maillog_log']));
+
+
+  variable_set('sendgrid_integration_maillog_devel', check_plain($form_state['values']['sendgrid_integration_maillog_devel']));
+
+  if (!empty($form_state['values']['sendgrid_integration_apikey'])) {
+    variable_set('sendgrid_integration_apikey', check_plain($form_state['values']['sendgrid_integration_apikey']));
+  }
+
 }
 
 /**
@@ -119,11 +162,11 @@ function sendgrid_integration_help($path, $arg) {
  * Implements hook_cron_queue_info().
  */
 function sendgrid_integration_cron_queue_info() {
-  $queues = array();
-  $queues['SendGridResendQueue'] = array(
+  $queues = [];
+  $queues['SendGridResendQueue'] = [
     'worker callback' => 'sendgrid_integration_email_resend',
     'time' => 60,
-  );
+  ];
 
   return $queues;
 }
@@ -173,16 +216,16 @@ function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, 
   if (isset($start_date) == FALSE || isset($end_date) == FALSE) {
     watchdog('SendGrid Integration', 'Error on calling get_bounches: Missing date parameter', NULL, WATCHDOG_NOTICE, $link = NULL);
 
-    return array();
+    return [];
   }
 
-  $data = array(
+  $data = [
     'date' => 1,
     'start_date' => $start_date,
     'end_date' => $end_date,
     'api_user' => $user,
     'api_key' => $key,
-  );
+  ];
 
   if (isset($type)) {
     $data['type'] = $type;
@@ -193,14 +236,14 @@ function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, 
   }
 
   // Options for drupal_http_request.
-  $options = array(
+  $options = [
     'method' => 'GET',
     'data' => http_build_query($data),
     'timeout' => 30,
-    'headers' => array(
+    'headers' => [
       'Content-Type' => 'application/x-www-form-urlencoded',
-    ),
-  );
+    ],
+  ];
 
   $response = drupal_http_request($server, $options);
 
@@ -208,7 +251,7 @@ function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, 
 
   // Check if server returned error messages
   if (isset($list['error'])) {
-    watchdog('SendGrid Integration', 'Error while retrieving bounces list: %error', array('%error' => $list['error']), WATCHDOG_NOTICE, $link = NULL);
+    watchdog('SendGrid Integration', 'Error while retrieving bounces list: %error', ['%error' => $list['error']], WATCHDOG_NOTICE, $link = NULL);
   }
 
   return $list;
@@ -219,10 +262,10 @@ function sendgrid_integration_get_bounces($start_date, $end_date, $type = NULL, 
  */
 function sendgrid_integration_parse_address($email) {
   if (preg_match(SENDGRID_INTEGRATION_EMAIL_REGEX, $email, $matches)) {
-    return array($matches[2], $matches[1]);
+    return [$matches[2], $matches[1]];
   }
   else {
-    return array($email, ' ');
+    return [$email, ' '];
   }
 }
 
