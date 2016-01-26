@@ -90,10 +90,12 @@ class SendGridMailSystem implements MailSystemInterface {
       ->setFrom($data['from'])
       ->setFromName($data['fromname'])
       ->setSubject($message['subject'])
-      // @todo See issue #2655940 Under development.
-      // ->setReplyTo()
       ->setCategories($categories)
       ->setUniqueArgs($unique_args);
+
+    if(isset($message['headers']['Reply-To'])){
+      $sendgrid_message->setReplyTo($message['headers']['Reply-To']);
+    }
 
     // If there are multiple recipients we use a different method for To:
     if (strpos(',', $message['to'])) {
@@ -160,8 +162,7 @@ class SendGridMailSystem implements MailSystemInterface {
         $record->header_from = $sendgrid_message->getFrom();
         // This returns an array of emails so we have to make a string.
         $record->header_to = implode(',', $sendgrid_message->smtpapi->to);
-        // See issue #2655940. Under development.
-        // $record->header_reply_to = isset($headers['Reply-To']) ? $headers['Reply-To'] : '';
+        $record->header_reply_to = $sendgrid_message->getReplyTo();
         $record->header_all = serialize($message['headers']);
         $record->sent_date = REQUEST_TIME;
 
