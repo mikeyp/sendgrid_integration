@@ -4,46 +4,57 @@
  * Provides a form to send a test email through Sendgrid.
  */
 function sendgrid_integration_test() {
-  $form = array();
+  $form = [];
 
   $defaults = variable_get(
     'sendgrid_integration_test_defaults',
-    array(
+    [
       'to' => variable_get('site_mail', 'user@example.com'),
       'subject' => 'Test Email from SendGrid Module',
-      'body' => array(
+      'body' => [
         'value' => 'Test Message for SendGrid.',
-      ),
-    )
+      ],
+    ]
   );
 
   $defaults['body']['format'] = filter_fallback_format();
-  $form['to'] = array(
+  $form['to'] = [
     '#type' => 'textfield',
     '#title' => t('To'),
     '#default_value' => $defaults['to'],
     '#maxlength' => 128,
     '#required' => TRUE,
-  );
-  $form['subject'] = array(
+  ];
+  $form['replyto'] = [
+    '#type' => 'textfield',
+    '#title' => t('Reply-To'),
+    '#maxlength' => 128,
+  ];
+  $form['subject'] = [
     '#type' => 'textfield',
     '#title' => t('Subject'),
     '#default_value' => $defaults['subject'],
     '#maxlength' => 128,
     '#required' => TRUE,
-  );
-  $form['body'] = array(
+  ];
+  $form['include_attachment'] = [
+    '#title' => t('Include attachment'),
+    '#type' => 'checkbox',
+    '#description' => t('If checked, the Drupal icon will be included as an attachment with the test email.'),
+    '#default_value' => TRUE,
+  ];
+  $form['body'] = [
     '#type' => 'text_format',
     '#title' => t('Body'),
     '#rows' => 20,
     '#default_value' => $defaults['body']['value'],
     '#format' => $defaults['body']['format'],
     '#required' => TRUE,
-  );
-  $form['submit'] = array(
+  ];
+  $form['submit'] = [
     '#type' => 'submit',
     '#value' => t('Send test message'),
-  );
+  ];
   return $form;
 }
 
@@ -52,29 +63,33 @@ function sendgrid_integration_test() {
  */
 function sendgrid_integration_test_submit($form, &$form_state) {
   // Create defaults array.
-  $defaults = array(
+  $defaults = [
     'to' => $form_state['values']['to'],
     'subject' => $form_state['values']['subject'],
     'body' => $form_state['values']['body'],
-  );
+  ];
   // Set the defaults for reuse.
   variable_set('sendgrid_integration_test_defaults', $defaults);
 
-  $params = array(
+  $params = [
     'subject' => $form_state['values']['subject'],
     'body' => check_markup(
       $form_state['values']['body']['value'],
       $form_state['values']['body']['format']
     ),
-  );
+  ];
+  if (!empty($form_state['values']['replyto'])) {
+    $message['Reply-To'] = $form_state['values']['replyto'];
+  }
+  $params['include_attachment'] = $form_state['values']['include_attachment'];
   // Setting a specific mail system for the SendGrid Integration Module.
-  mailsystem_set(array('sendgrid_integration' => 'SendGridMailSystem'));
+  mailsystem_set(['sendgrid_integration' => 'SendGridMailSystem']);
   // Attempt to send the email and post a message if it was successful.
   $result = drupal_mail('sendgrid_integration', 'test', $form_state['values']['to'], language_default(), $params);
   if (isset($result['result']) && $result['result'] == 'true') {
-    drupal_set_message(t('SendGrid test email sent from %from to %to.', array(
+    drupal_set_message(t('SendGrid test email sent from %from to %to.', [
       '%from' => $result['from'],
-      '%to' => $result['to']
-    )), 'status');
+      '%to' => $result['to'],
+    ]), 'status');
   }
 }
