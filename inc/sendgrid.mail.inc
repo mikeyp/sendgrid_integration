@@ -93,7 +93,7 @@ class SendGridMailSystem implements MailSystemInterface {
       ->setCategories($categories)
       ->setUniqueArgs($unique_args);
 
-    if(isset($message['headers']['Reply-To'])){
+    if (isset($message['headers']['Reply-To'])) {
       $sendgrid_message->setReplyTo($message['headers']['Reply-To']);
     }
 
@@ -152,6 +152,39 @@ class SendGridMailSystem implements MailSystemInterface {
       $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
     }
 
+    // Prepare attachments.
+    $attachments = [];
+    if (isset($message['attachments']) && !empty($message['attachments'])) {
+      foreach ($message['attachments'] as $attachmentitem) {
+        if (is_file($attachmentitem)) {
+          $attachments[$attachmentitem] = $attachmentitem;
+        }
+      }
+    }
+
+    // If we have attachments, add them.
+    if (!empty($attachments)) {
+      $sendgrid_message->setAttachments($attachments);
+    }
+
+    /* The Mime Mail module (mimemail) expects attachments as an array of file
+    // arrays in $message['params']['attachments']. Mimemail is a very popular
+    // module so we must adddress the way it handles attachments.
+    if (isset($message['params']['attachments']) && !empty($message['params']['attachments'])) {
+      foreach ($message['params']['attachments'] as $attachment) {
+        // Sendgrid API only supports attachments as files.
+        if (isset($attachment['uri'])) {
+          $attachment_path = drupal_realpath($attachment['uri']);
+          if (is_file($attachment_path)) {
+            $sendgrid_message->setAttachments($attachment_path);
+          }
+        }
+      }
+      // Remove the file objects from $message['params']['attachments'].
+      // (This prevents double-attaching in the drupal_alter hook below.)
+      unset($message['params']['attachments']);
+    }*/
+
     // Integration with the Maillog module to use for debugging.
     if (module_exists('maillog')) {
       if (variable_get('sendgrid_integration_maillog_log', TRUE)) {
@@ -161,7 +194,7 @@ class SendGridMailSystem implements MailSystemInterface {
         $record->subject = $sendgrid_message->getSubject();
         $record->header_from = $sendgrid_message->getFrom();
         // This returns an array of emails so we have to make a string.
-        $record->header_to = implode(',', $sendgrid_message->smtpapi->to);
+        $record->header_to = implode(',', $sendgrid_message->getTos());
         $record->header_reply_to = $sendgrid_message->getReplyTo();
         $record->header_all = serialize($message['headers']);
         $record->sent_date = REQUEST_TIME;
@@ -171,13 +204,13 @@ class SendGridMailSystem implements MailSystemInterface {
 
         // @todo See issue #2656090 In development.
         // Load the attachments.
-        //$attachments = $message->GetAttachments();
+        $attachments = $sendgrid_message->getAttachments();
 
         // If there's more than one item to display, add a divider.
-        //if (!empty($attachments)) {
-        //  $record->body = t('Body') . ":\n";
-        //  $record->body .= $divider;
-        //}
+        if (!empty($attachments)) {
+          $record->body = t('Body') . ":\n";
+          $record->body .= $divider;
+        }
 
         // Check Content-Type of message body and get the appropriate content.
         if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
@@ -193,20 +226,20 @@ class SendGridMailSystem implements MailSystemInterface {
         }
 
         // @todo This is waiting on issue #2656090
-        /* List the attachments.
+        // List the attachments.
         if (!empty($attachments)) {
           $record->body .= "\n";
           $record->body .= $divider;
           $record->body .= t('Attachments') . ":\n";
           $record->body .= $divider;
           foreach ($attachments as $file) {
-            $record->body .= t('Filename') . ':' . $file[1] . "\n";
-            $record->body .= t('Name') . ':' . $file[2] . "\n";
-            $record->body .= t('Encoding') . ':' . $file[3] . "\n";
-            $record->body .= t('Type') . ':' . $file[4] . "\n";
+            $record->body .= t('Filename') . ':' . $file['filename'] . "\n";
+            $record->body .= t('Directory Name') . ':' . $file['dirname'] . "\n";
+            $record->body .= t('Extension') . ':' . $file['extension'] . "\n";
+            $record->body .= t('Basename') . ':' . $file['basename'] . "\n";
             $record->body .= "\n";
           }
-        }*/
+        }
 
         drupal_write_record('maillog', $record);
       }
@@ -216,11 +249,11 @@ class SendGridMailSystem implements MailSystemInterface {
         $devel_msg = [];
         $devel_msg[t('Subject')] = $sendgrid_message->getSubject();
         $devel_msg[t('From')] = $sendgrid_message->getFrom();
-        $devel_msg[t('To')] = implode(',', $sendgrid_message->smtpapi->to);
-        //$devel_msg[t('Reply-To')] = isset($headers['Reply-To']) ? $headers['Reply-To'] : NULL;
+        $devel_msg[t('To')] = implode(',', $sendgrid_message->getTos());
+        $devel_msg[t('Reply-To')] = !empty($sendgrid_message->getReplyTo()) ? $sendgrid_message->getReplyTo() : NULL;
         $devel_msg[t('Headers')] = $sendgrid_message->getHeaders();
         $devel_msg[t('Body')] = $bodydevel;
-        //$devel_msg[t('Attachments')] = $mailer->GetAttachments();
+        $devel_msg[t('Attachments')] = $sendgrid_message->getAttachments();
 
         dpm($devel_msg, 'maillog');
       }
