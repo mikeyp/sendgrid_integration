@@ -88,11 +88,12 @@ class SendGridMailSystem implements MailSystemInterface {
 
     $sendgrid_message
       ->setFrom($data['from'])
-      ->setFromName($data['fromname'])
       ->setSubject($message['subject'])
       ->setCategories($categories)
       ->setUniqueArgs($unique_args);
-
+    if (!empty($data['fromname'])) {
+      $sendgrid_message->setFromName($data['fromname']);
+    }
     if (isset($message['headers']['Reply-To'])) {
       $sendgrid_message->setReplyTo($message['headers']['Reply-To']);
     }
@@ -103,14 +104,18 @@ class SendGridMailSystem implements MailSystemInterface {
       foreach ($sendtosarry as $item) {
         $firsttoaddress = sendgrid_integration_parse_address(array_shift($item));
         $sendgrid_message->addTo($firsttoaddress[0]);
-        $sendgrid_message->addToName($firsttoaddress[1]);
+        if (!empty($firsttoaddress[1])) {
+          $sendgrid_message->addToName($firsttoaddress[1]);
+        }
         $sendgrid_message->setSmtpapiTos($sendtosarry);
       }
     }
     else {
       $toaddrarray = sendgrid_integration_parse_address($message['to']);
       $sendgrid_message->addTo($toaddrarray[0]);
-      $sendgrid_message->addToName($toaddrarray[1]);
+      if (!empty($toaddrarray[1])) {
+        $sendgrid_message->addToName($toaddrarray[1]);
+      }
     }
 
     //Add cc and bcc in mail if they exist.
