@@ -172,24 +172,6 @@ class SendGridMailSystem implements MailSystemInterface {
       $sendgrid_message->setAttachments($attachments);
     }
 
-    /* The Mime Mail module (mimemail) expects attachments as an array of file
-    // arrays in $message['params']['attachments']. Mimemail is a very popular
-    // module so we must adddress the way it handles attachments.
-    if (isset($message['params']['attachments']) && !empty($message['params']['attachments'])) {
-      foreach ($message['params']['attachments'] as $attachment) {
-        // Sendgrid API only supports attachments as files.
-        if (isset($attachment['uri'])) {
-          $attachment_path = drupal_realpath($attachment['uri']);
-          if (is_file($attachment_path)) {
-            $sendgrid_message->setAttachments($attachment_path);
-          }
-        }
-      }
-      // Remove the file objects from $message['params']['attachments'].
-      // (This prevents double-attaching in the drupal_alter hook below.)
-      unset($message['params']['attachments']);
-    }*/
-
     // Integration with the Maillog module to use for debugging.
     if (module_exists('maillog')) {
       if (variable_get('sendgrid_integration_maillog_log', TRUE)) {
@@ -206,7 +188,8 @@ class SendGridMailSystem implements MailSystemInterface {
 
         // Used to separate different portions of the body string.
         $divider = str_repeat('-', 60) . "\n";
-
+        // Initialize object
+        $record->body = '';
         // @todo See issue #2656090 In development.
         // Load the attachments.
         $attachments = $sendgrid_message->getAttachments();
