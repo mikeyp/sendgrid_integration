@@ -14,16 +14,30 @@ function sendgrid_integration_test() {
       'body' => [
         'value' => 'Test Message for SendGrid.',
       ],
+      'fromname' => '',
+      'toname' => '',
     ]
   );
 
   $defaults['body']['format'] = filter_fallback_format();
+  $form['fromname'] = [
+    '#type' => 'textfield',
+    '#title' => t('From name'),
+    '#default_value' => $defaults['fromname'],
+    '#maxlength' => 128,
+  ];
   $form['to'] = [
     '#type' => 'textfield',
     '#title' => t('To'),
     '#default_value' => $defaults['to'],
     '#maxlength' => 128,
     '#required' => TRUE,
+  ];
+  $form['toname'] = [
+    '#type' => 'textfield',
+    '#title' => t('To Name'),
+    '#default_value' => $defaults['toname'],
+    '#maxlength' => 128,
   ];
   $form['replyto'] = [
     '#type' => 'textfield',
@@ -67,6 +81,8 @@ function sendgrid_integration_test_submit($form, &$form_state) {
     'to' => $form_state['values']['to'],
     'subject' => $form_state['values']['subject'],
     'body' => $form_state['values']['body'],
+    'toname' => $form_state['values']['toname'],
+    'fromname' => $form_state['values']['fromname'],
   ];
   // Set the defaults for reuse.
   variable_set('sendgrid_integration_test_defaults', $defaults);
@@ -81,15 +97,27 @@ function sendgrid_integration_test_submit($form, &$form_state) {
   if (!empty($form_state['values']['replyto'])) {
     $message['Reply-To'] = $form_state['values']['replyto'];
   }
-  $params['include_attachment'] = $form_state['values']['include_attachment'];
+  if (!empty($form_state['values']['toname'])) {
+    $sendto = $form_state['values']['toname'] . '<' . $form_state['values']['to'] . '>';
+  }
+  else {
+    $sendto = $form_state['values']['to'];
+  }
+  $params['include_test_attachment'] = $form_state['values']['include_attachment'];
   // Setting a specific mail system for the SendGrid Integration Module.
   mailsystem_set(['sendgrid_integration' => 'SendGridMailSystem']);
   // Attempt to send the email and post a message if it was successful.
-  $result = drupal_mail('sendgrid_integration', 'test', $form_state['values']['to'], language_default(), $params);
+  if (!empty($form_state['values']['fromname'])) {
+    $senderfrom = $form_state['values']['fromname'] . ' <' . variable_get('site_mail') . '>';
+  }
+  else {
+    $senderfrom = variable_get('site_mail');
+  }
+  $result = drupal_mail('sendgrid_integration', 'test', $sendto, language_default(), $params, $senderfrom);
   if (isset($result['result']) && $result['result'] == 'true') {
     drupal_set_message(t('SendGrid test email sent from %from to %to.', [
-      '%from' => $result['from'],
-      '%to' => $result['to'],
+      '%from' => $senderfrom,
+      '%to' => $sendto,
     ]), 'status');
   }
 }
