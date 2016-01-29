@@ -280,7 +280,7 @@ function sendgrid_integration_mail($key, &$message, $params) {
     MAIL_LINE_ENDINGS . MAIL_LINE_ENDINGS,
     $params['body']
   );
-  if ($params['include_attachment']) {
+  if ($params['include_test_attachment']) {
     $message['attachments'][] = drupal_realpath('misc/druplicon.png');
   }
 }
