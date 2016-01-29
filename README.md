@@ -16,11 +16,21 @@ SendGrid Transactional Email service instead.
 REQUIREMENTS
 --------------------------------------------------------------------------------
 Module dependencies:
-Composer Manager - A Drupal module to faciltate the use of Composer:
-https://getcomposer.org
+Composer Manager (https://www.drupal.org/project/composer_manager) - A Drupal
+module to faciltate the use of Composer (https://getcomposer.org) on a per-module
+basis.
+
+Composer is the definitive source for PHP dependencies, but implementing
+Composer in modules is difficult to say the least. Composer typically acts over
+an entire project - in this case it would be your entire Drupal source code. 
+Composer manager allows for modules to declare their own composer.json file
+rather than a project global composer.json.
   
-  Composer is being used because it makes life easy:
+  Composer is being used because of the usefulness it offers:
   https://www.acquia.com/blog/using-composer-manager-get-island-now
+
+Running Composer and composer manager will require command line access via
+DRUSH. There is no GUI for this tool.
 
 Mailsystem - A module to create an agnostic management layer for Mail. Very
 useful for controling the mail system on Drupal.
