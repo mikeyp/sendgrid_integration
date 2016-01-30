@@ -37,10 +37,14 @@ useful for controling the mail system on Drupal.
 
 INSTALLATION
 --------------------------------------------------------------------------------
-Installing this module is simple
+Installing this module requires some more advanced knowledge, use of the command
+line and the use of Drush.
 
 1. Move this folder under modules directory of your installation,
    example sites/all/modules or sites/default/modules
+   
+2. Install Dependencies which include Composer Manager. Use Drush to update
+   dependencies via composer. This will download the Sendgrid API.
    
 2. Navigate to Modules and enable SendGrid Integration in the Mail category.
 
@@ -56,6 +60,13 @@ to crontab (Linux only), read more about cron at https://www.drupal.org/cron.
 If you would like a record of the emails being sent by the website, installing
 Maillog (https://www.drupal.org/project/maillog) will allow you to store local
 copies of the emails sent. Sendgrid does not store the content of the email.
+
+DEBUGGING
+--------------------------------------------------------------------------------
+Debugging this module while installed can be done by installing the Maillog
+module (https://www.drupal.org/project/maillog). This module will allow you to
+store the emails locally before they are sent and view the message generated
+in the Sendgrid email object.
 
 RESOURCES
 --------------------------------------------------------------------------------
