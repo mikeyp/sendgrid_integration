@@ -190,7 +190,6 @@ class SendGridMailSystem implements MailSystemInterface {
         $divider = str_repeat('-', 60) . "\n";
         // Initialize object
         $record->body = '';
-        // @todo See issue #2656090 In development.
         // Load the attachments.
         $attachments = $sendgrid_message->getAttachments();
         $toaddresses = $sendgrid_message->getTos();
