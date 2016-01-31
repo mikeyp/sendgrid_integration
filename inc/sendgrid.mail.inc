@@ -193,23 +193,46 @@ class SendGridMailSystem implements MailSystemInterface {
         // @todo See issue #2656090 In development.
         // Load the attachments.
         $attachments = $sendgrid_message->getAttachments();
-
-        // If there's more than one item to display, add a divider.
-        if (!empty($attachments)) {
-          $record->body = t('Body') . ":\n";
-          $record->body .= $divider;
+        $toaddresses = $sendgrid_message->getTos();
+        $toaddressesnames = $sendgrid_message->getToNames();
+        $record->body .= 'Addressing Information' . "\n";
+        $i = 0;
+        foreach ($toaddresses as $item) {
+          $record->body .= 'To Address ' . $i . ' : ' . $item . "\n";
+          $i++;
         }
+        $i = 0;
+        foreach ($toaddressesnames as $item) {
+          $record->body .= 'To Address Names ' . $i . ' : ' . $item . "\n";
+          $i++;
+        }
+        $fromaddresses = $sendgrid_message->getFrom(TRUE);
+
+        if (is_array($fromaddresses)) {
+          $i = 0;
+          foreach ($fromaddresses as $key => $value) {
+            $record->body .= 'From Address ' . $i . ' : ' . $key . "\n";
+            $record->body .= 'From Names ' . $i . ' : ' . $value . "\n";
+          }
+        }
+        else{
+          $record->body .= 'From Address: ' . $fromaddresses . "\n";
+        }
+
+        $record->body .= $divider;
 
         // Check Content-Type of message body and get the appropriate content.
         if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
           $record->body .= 'Body HTML' . "\n";
           $record->body .= $sendgrid_message->getHtml();
+          $record->body .= $divider;
           $bodydevel = 'Body HTML' . "\n" . $sendgrid_message->getHtml();
         }
         else {
           // Message body is text/plain.
           $record->body .= 'Body Plain Text' . "\n";
           $record->body .= $sendgrid_message->getText();
+          $record->body .= $divider;
           $bodydevel = 'Body Plain Text' . "\n" . $sendgrid_message->getText();
         }
 
