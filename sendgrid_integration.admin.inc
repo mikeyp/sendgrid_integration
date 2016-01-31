@@ -16,6 +16,7 @@ function sendgrid_integration_test() {
       ],
       'fromname' => '',
       'toname' => '',
+      'replyto' => '',
     ]
   );
 
@@ -43,6 +44,7 @@ function sendgrid_integration_test() {
     '#type' => 'textfield',
     '#title' => t('Reply-To'),
     '#maxlength' => 128,
+    '#default_value' => $defaults['replyto'],
   ];
   $form['subject'] = [
     '#type' => 'textfield',
@@ -83,6 +85,7 @@ function sendgrid_integration_test_submit($form, &$form_state) {
     'body' => $form_state['values']['body'],
     'toname' => $form_state['values']['toname'],
     'fromname' => $form_state['values']['fromname'],
+    'replyto' => $form_state['values']['replyto'],
   ];
   // Set the defaults for reuse.
   variable_set('sendgrid_integration_test_defaults', $defaults);
@@ -95,7 +98,7 @@ function sendgrid_integration_test_submit($form, &$form_state) {
     ),
   ];
   if (!empty($form_state['values']['replyto'])) {
-    $message['Reply-To'] = $form_state['values']['replyto'];
+    $params['Reply-To'] = $form_state['values']['replyto'];
   }
   if (!empty($form_state['values']['toname'])) {
     $sendto = $form_state['values']['toname'] . '<' . $form_state['values']['to'] . '>';
