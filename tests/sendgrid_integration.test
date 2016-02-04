@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * Contains tests for the Sendgrid Integration module.
+ */
+
+/**
+ * Test case.
+ */
+class SendgridIntegrationTestCase extends DrupalWebTestCase {
+
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array(
+      'name' => t('Sendgrid Integration tests'),
+      'description' => t('Sendgrid Integration Module'),
+      'group' => t('Sendgrid Integration'),
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  function setUp() {
+    // Call the parent with an array of modules to enable for the test.
+    parent::setUp(array('sendgrid_integration'));
+
+    // TODO: perform additional setup tasks here if required.
+  }
+
+  /**
+   * Test the module's functionality.
+   */
+  function testTodoChangeThisName() {
+    // TODO: write test!
+  }
+
+}
