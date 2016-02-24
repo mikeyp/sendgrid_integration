@@ -54,6 +54,12 @@ drupal_ti_ensure_drupal
 cd "$DRUPAL_TI_DRUPAL_DIR"
 echo "DRUPAL TI - Drush Enable Simpletest module"
 drush --yes en simpletest
+echo "DRUPAL TI - Download Composer module and enable"
+drush dl composer-8.x-1.x
+drush en -y composer
+echo "DRUPAL TI - Delete cache dir"
+rm -f "$DRUPAL_TI_CACHE_DIR"/HOME/.drush/cache
+
 
 # Ensure the module is linked into the code base and enabled.
 echo "DRUPAL TI - Ensure the module is linked into the code base and enabled"
