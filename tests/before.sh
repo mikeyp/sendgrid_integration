@@ -14,9 +14,6 @@ drupal_ti_ensure_drupal
 cd "$DRUPAL_TI_DRUPAL_DIR"
 drush --yes en simpletest
 
-# Change to the Drupal directory
-cd "$DRUPAL_TI_DRUPAL_DIR"
-
 # Create the the module directory (only necessary for D7)
 # For D7, this is sites/default/modules
 # For D8, this is modules
