@@ -9,33 +9,45 @@
  * Test case.
  */
 class SendgridIntegrationTestCase extends DrupalWebTestCase {
+  /**
+   * Administrative user.
+   *
+   * @var object
+   */
+  protected $admin_user;
 
   /**
-   * Implements getInfo().
+   * Normal web user.
+   *
+   * @var object
    */
-  public static function getInfo() {
-    return array(
-      'name' => t('Sendgrid Integration tests'),
-      'description' => t('Sendgrid Integration Module'),
-      'group' => 'Sendgrid Integration',
-    );
-  }
+  protected $web_user;
 
   /**
    * Implements setUp().
    */
   function setUp() {
     // Call the parent with an array of modules to enable for the test.
-    parent::setUp(array('sendgrid_integration'));
+    $modules[] = 'sendgrid_integration';
+    parent::setUp($modules);
 
-    // TODO: perform additional setup tasks here if required.
-  }
+    // Create a generic authenticated user.
+    $this->web_user = $this->drupalCreateUser();
 
-  /**
-   * Test the module's functionality.
-   */
-  function testTodoChangeThisName() {
-    // TODO: write test!
+    // Create an admin user and log them in.
+    $this->admin_user = $this->drupalCreateUser([
+      'access content',
+      'create page content',
+      'edit own page content',
+      'administer url aliases',
+      'create url aliases',
+      'administer users',
+      'administer permissions',
+    ]);
+    $this->drupalLogin($this->admin_user);
+    // Set the role as admin for the admin user just created.
+    $this->drupalPost('user/' . $this->admin_user->uid . '/edit', ['roles[3]' => TRUE], t('Save'));
+
   }
 
 }
