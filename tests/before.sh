@@ -10,6 +10,10 @@ set -e $DRUPAL_TI_DEBUG
 # Note: This function is re-entrant.
 drupal_ti_ensure_drupal
 
+# Enable simpletest module.
+cd "$DRUPAL_TI_DRUPAL_DIR"
+drush --yes en simpletest
+
 # Change to the Drupal directory
 cd "$DRUPAL_TI_DRUPAL_DIR"
 
@@ -33,3 +37,7 @@ drupal_ti_ensure_module_linked
 cd "$DRUPAL_TI_DRUPAL_DIR"
 composer drupal-rebuild
 composer install --prefer-source
+
+# Clear caches and run a web server.
+drupal_ti_clear_caches
+drupal_ti_run_server
