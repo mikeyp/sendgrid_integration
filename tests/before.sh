@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Add an optional statement to see that this is running in Travis CI.
-echo "running tests/before.sh"
+echo "Running tests/before.sh"
 
 set -e $DRUPAL_TI_DEBUG
 
@@ -21,9 +21,10 @@ mkdir -p "$DRUPAL_TI_DRUPAL_DIR/$DRUPAL_TI_MODULES_PATH"
 cd "$DRUPAL_TI_DRUPAL_DIR/$DRUPAL_TI_MODULES_PATH"
 
 # Manually clone the dependencies
-git clone --depth 1 --branch 8.x-1.x http://git.drupal.org/project/composer_manager.git
+git clone --depth 1 --branch 7.x-1.x http://git.drupal.org/project/composer_manager.git
 
 # Initialize composer manage
+echo "Initializing Composer Manager"
 php "$DRUPAL_TI_DRUPAL_DIR/$DRUPAL_TI_MODULES_PATH/composer_manager/scripts/init.php"
 
 # Ensure the module is linked into the code base and enabled.

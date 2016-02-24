@@ -31,7 +31,7 @@ env:
   global:
     # add composer's global bin directory to the path
     # see: https://github.com/drush-ops/drush#install---composer
-    - PATH="$PATH:$HOME/.composer/vendor/bin"
+    - PATH="$HOME/.composer/vendor/bin:$PATH"
 
     # Configuration variables.
     - DRUPAL_TI_MODULE_NAME="sendgrid_integration"
