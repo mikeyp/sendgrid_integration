@@ -17,7 +17,7 @@ class SendgridIntegrationTestCase extends DrupalWebTestCase {
     return array(
       'name' => t('Sendgrid Integration tests'),
       'description' => t('Sendgrid Integration Module'),
-      'group' => t('Sendgrid Integration'),
+      'group' => 'Sendgrid Integration',
     );
   }
 
