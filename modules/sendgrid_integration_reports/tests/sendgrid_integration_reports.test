@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file 
+ * @file
  * Contains tests for the Sendgrid Integration Reports module.
  */
 
@@ -17,7 +17,7 @@ class SendgridIntegrationReportsTestCase extends DrupalWebTestCase {
     return array(
       'name' => t('Sendgrid Integration Reports tests'),
       'description' => t('TODO: write me.'),
-      'group' => t('Sendgrid Integration Reports'),
+      'group' => t('Sendgrid Integration'),
     );
   }
 
