@@ -5,6 +5,7 @@ php = 5.5
 package = Mail
 configure = admin/config/services/sendgrid
 files[] = inc/sendgrid.mail.inc
+files[] = tests/sendgrid_integration.test
 dependencies[] = mailsystem (>=2.x)
 dependencies[] = composer_manager
 
