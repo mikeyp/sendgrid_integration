@@ -47,5 +47,7 @@ class SendgridIntegrationTestCase extends DrupalWebTestCase {
     $this->drupalLogin($this->admin_user);
     // Set the role as admin for the admin user just created.
     $this->drupalPost('user/' . $this->admin_user->uid . '/edit', ['roles[3]' => TRUE], t('Save'));
+
   }
+
 }
