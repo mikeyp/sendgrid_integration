@@ -38,6 +38,10 @@ class SendGridMailSystem implements MailSystemInterface {
       'id' => $message['id'],
       'module' => $message['module'],
     ];
+    // If this is a password reset. Bypass spam filters.
+    if ($message['id'] == 'user_password_reset') {
+      $sendgrid_message->addFilter('bypass_list_management', 'enable', 1);
+    }
 
     if (isset($message['params']['account']->uid)) {
       $unique_args['uid'] = $message['params']['account']->uid;
@@ -214,7 +218,7 @@ class SendGridMailSystem implements MailSystemInterface {
             $record->body .= 'From Names ' . $i . ' : ' . $value . "\n";
           }
         }
-        else{
+        else {
           $record->body .= 'From Address: ' . $fromaddresses . "\n";
         }
 
