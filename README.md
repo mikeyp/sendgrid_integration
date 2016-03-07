@@ -71,4 +71,4 @@ in the Sendgrid email object.
 RESOURCES
 --------------------------------------------------------------------------------
 Information about the Sendgrid PHP Library is availabe on Github:
-https://github.com/sendgrid/sendgrid-php
+https://github.com/taz77/sendgrid-php-ng
