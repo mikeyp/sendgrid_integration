@@ -8,6 +8,7 @@
 /**
  * Test case.
  */
+
 class SendgridIntegrationTestCase extends DrupalWebTestCase {
   /**
    * Administrative user.
@@ -39,8 +40,6 @@ class SendgridIntegrationTestCase extends DrupalWebTestCase {
       'access content',
       'create page content',
       'edit own page content',
-      'administer url aliases',
-      'create url aliases',
       'administer users',
       'administer permissions',
     ]);
