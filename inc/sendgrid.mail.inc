@@ -8,6 +8,9 @@ class SendGridMailSystem implements MailSystemInterface {
 
   /**
    * Email formatting, example strip away html.
+   *
+   * @param array $message
+   * @return array
    */
   public function format(array $message) {
     // Join message array.
@@ -16,8 +19,12 @@ class SendGridMailSystem implements MailSystemInterface {
     return $message;
   }
 
+
   /**
-   * Send email message.
+   * Emplment mail method to send mail via Sendgrid.
+   *
+   * @param array $message
+   * @return bool
    */
   public function mail(array $message) {
 
@@ -39,7 +46,11 @@ class SendGridMailSystem implements MailSystemInterface {
       'module' => $message['module'],
     ];
     // If this is a password reset. Bypass spam filters.
-    if ($message['id'] == 'user_password_reset') {
+    if (strpos($message['id'], 'password')) {
+      $sendgrid_message->addFilter('bypass_list_management', 'enable', 1);
+    }
+    // If this is a Drupal Commerce message. Bypass spam filters.
+    if (strpos($message['id'], 'commerce')) {
       $sendgrid_message->addFilter('bypass_list_management', 'enable', 1);
     }
 
@@ -224,6 +235,16 @@ class SendGridMailSystem implements MailSystemInterface {
 
         $record->body .= $divider;
 
+        if ($filters = $sendgrid_message->smtpapi->getFilters()) {
+          $record->body .= 'Filters:' . "\n";
+          $record->body .= print_r($filters);
+          $record->body .= $divider;
+        }
+        else {
+          $record->body .= 'No Filters Declared.' . "\n";
+          $record->body .= $divider;
+        }
+
         // Check Content-Type of message body and get the appropriate content.
         if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
           $record->body .= 'Body HTML' . "\n";
@@ -268,6 +289,7 @@ class SendGridMailSystem implements MailSystemInterface {
         $devel_msg[t('Headers')] = $sendgrid_message->getHeaders();
         $devel_msg[t('Body')] = $bodydevel;
         $devel_msg[t('Attachments')] = $sendgrid_message->getAttachments();
+        $devel_msg[t('Message ID')] = $message['id'];
 
         dpm($devel_msg, 'maillog');
       }
