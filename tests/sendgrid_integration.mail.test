@@ -8,7 +8,7 @@
 /**
  * Test case.
  */
-class FacebookTrackingPixelTestUserCase extends SendgridIntegrationTestCase {
+class SendgridIntegrationTestCaseMail extends SendgridIntegrationTestCase {
 
   /**
    * {@inheritdoc}
