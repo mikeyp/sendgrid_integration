@@ -50,6 +50,9 @@ line and the use of Drush.
 
 3. Configure your SendGrid Username and API-Key in admin/config/system/sendgrid
 
+* Composer Manager Documentation: [https://www.drupal.org/node/2405805](https://www.drupal.org/node/2405805)
+* Composer Documentation: [https://getcomposer.org/doc/](https://getcomposer.org/doc/)
+
 OPTIONAL
 --------------------------------------------------------------------------------
 If sending email fails with certain (pre-defined) response codes the message be
