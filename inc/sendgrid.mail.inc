@@ -259,8 +259,7 @@ class SendGridMailSystem implements MailSystemInterface {
           $record->body .= $divider;
           $bodydevel = 'Body Plain Text' . "\n" . $sendgrid_message->getText();
         }
-
-        // @todo This is waiting on issue #2656090
+        
         // List the attachments.
         if (!empty($attachments)) {
           $record->body .= "\n";
