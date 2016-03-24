@@ -35,6 +35,7 @@ env:
   - DRUPAL_TI_PHPUNIT_ARGS=""
   - DRUPAL_TI_COVERAGE="satooshi/php-coveralls:0.6.*"
   - DRUPAL_TI_COVERAGE_FILE="build/logs/clover.xml"
+  - DRUPAL_TI_DRUSH_VERSION="drush/drush:8.0.5"
   matrix:
   - DRUPAL_TI_RUNNERS="simpletest"
 mysql:
