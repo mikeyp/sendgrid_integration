@@ -189,12 +189,12 @@ function sendgrid_integration_email_resend($message) {
 }
 
 /**
- * Get list of bounced emails.
+ * Get list of bounced emails. This is unused and may be come deprecated.
  *
  * @param string $start_date
  * Start date in format of YYYY-MM-DD.
  *
- * @param date $end_date
+ * @param string $end_date
  * End date in format of YYYY-MM-DD.
  *
  * @param string $type
