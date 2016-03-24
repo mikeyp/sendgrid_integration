@@ -21,7 +21,7 @@ class SendGridMailSystem implements MailSystemInterface {
 
 
   /**
-   * Emplment mail method to send mail via Sendgrid.
+   * Implement mail method to send mail via Sendgrid.
    *
    * @param array $message
    * @return bool
