@@ -10,8 +10,11 @@ If you want more info about SendGrid services, contact SendGrid
 
 FUNCTIONALITY
 --------------------------------------------------------------------------------
-This module overrides default email sending behaviour andsending emails through
+This module overrides default email sending behaviour and sending emails through
 SendGrid Transactional Email service instead.
+
+Failures to send are re-queued for sending later. Queue of failed messages are
+run on a 60 minute interval.
 
 REQUIREMENTS
 --------------------------------------------------------------------------------
