@@ -24,7 +24,7 @@ function sendgrid_integration_test() {
   $form['fromname'] = [
     '#type' => 'textfield',
     '#title' => t('From name'),
-    '#default_value' => $defaults['fromname'],
+    '#default_value' => (isset($defaults['fromname'])) ? $defaults['fromname'] : '',
     '#maxlength' => 128,
   ];
   $form['to'] = [
@@ -37,14 +37,14 @@ function sendgrid_integration_test() {
   $form['toname'] = [
     '#type' => 'textfield',
     '#title' => t('To Name'),
-    '#default_value' => $defaults['toname'],
+    '#default_value' => (isset($defaults['toname'])) ? $defaults['toname'] : '',
     '#maxlength' => 128,
   ];
   $form['replyto'] = [
     '#type' => 'textfield',
     '#title' => t('Reply-To'),
     '#maxlength' => 128,
-    '#default_value' => $defaults['replyto'],
+    '#default_value' => (isset($defaults['replyto'])) ? $defaults['replyto'] : '',
   ];
   $form['subject'] = [
     '#type' => 'textfield',
