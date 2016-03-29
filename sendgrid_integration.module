@@ -283,7 +283,7 @@ function sendgrid_integration_mail($key, &$message, $params) {
   if ($params['include_test_attachment']) {
     $message['attachments'][] = drupal_realpath('misc/druplicon.png');
   }
-  if ($params['Reply-To']) {
+  if (isset($params['Reply-To']) && !empty($params['Reply-To'])) {
     $message['headers']['Reply-To'] = $params['Reply-To'];
   }
 }
