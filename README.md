@@ -47,7 +47,9 @@ line and the use of Drush.
    example sites/all/modules or sites/default/modules
    
 2. Install Dependencies which include Composer Manager. Use Drush to update
-   dependencies via composer. This will download the Sendgrid API.
+   dependencies via composer `drush composer-manager update --no-dev`. 
+   This will download the Sendgrid API. It is important to use the --no-dev option so you 
+   do not download libariers that are used for development and testing only.
    
 2. Navigate to Modules and enable SendGrid Integration in the Mail category.
 
