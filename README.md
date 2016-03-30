@@ -55,6 +55,10 @@ line and the use of Drush.
 
 3. Configure your SendGrid Username and API-Key in admin/config/system/sendgrid
 
+4. Confirm that the mail system is setup to use Sendgrid for how you wish to run
+   you website. If you want it all to run through Sendgrid then you set the
+   System-wide default MailSystemInterface class to "SendGridMailSystem".
+
 * Composer Manager Documentation: [https://www.drupal.org/node/2405805](https://www.drupal.org/node/2405805)
 * Composer Documentation: [https://getcomposer.org/doc/](https://getcomposer.org/doc/)
 
