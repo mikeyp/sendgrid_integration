@@ -57,7 +57,8 @@ line and the use of Drush.
 
 4. Confirm that the mail system is setup to use Sendgrid for how you wish to run
    you website. If you want it all to run through Sendgrid then you set the
-   System-wide default MailSystemInterface class to "SendGridMailSystem".
+   System-wide default MailSystemInterface class to "SendGridMailSystem". As an
+   example, see this [image](https://www.drupal.org/files/issues/sengrid-integration-mailsystem-settings-example.png).
 
 * Composer Manager Documentation: [https://www.drupal.org/node/2405805](https://www.drupal.org/node/2405805)
 * Composer Documentation: [https://getcomposer.org/doc/](https://getcomposer.org/doc/)
