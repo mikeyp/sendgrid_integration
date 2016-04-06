@@ -8,17 +8,17 @@
 /**
  * Test case.
  */
-class SendgridIntegrationReportsTestCase extends DrupalWebTestCase {
+class SendgridIntegrationReportsTestCase extends SendgridIntegrationTestCase {
 
   /**
    * Implements getInfo().
    */
   public static function getInfo() {
-    return array(
+    return [
       'name' => t('Sendgrid Integration Reports tests'),
       'description' => t('TODO: write me.'),
       'group' => t('Sendgrid Integration'),
-    );
+    ];
   }
 
   /**
@@ -26,7 +26,11 @@ class SendgridIntegrationReportsTestCase extends DrupalWebTestCase {
    */
   function setUp() {
     // Call the parent with an array of modules to enable for the test.
-    parent::setUp(array('sendgrid_integration_reports'));
+    $modules = [
+      'sendgrid_integration',
+      'sendgrid_integration_reports'
+    ];
+    parent::setUp($modules);
 
     // TODO: perform additional setup tasks here if required.
   }
