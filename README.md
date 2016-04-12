@@ -63,6 +63,13 @@ line and the use of Drush.
 * Composer Manager Documentation: [https://www.drupal.org/node/2405805](https://www.drupal.org/node/2405805)
 * Composer Documentation: [https://getcomposer.org/doc/](https://getcomposer.org/doc/)
 
+HTML Email
+--------------------------------------------------------------------------------
+In order to send HTML email. Your installation of Drupal must generate an email
+with the proper headers. Sendgrid Integration modules looks for the content type
+of the email to be set to "text/html" in the header (i.e. "Content-Type"="text/html").
+
+
 OPTIONAL
 --------------------------------------------------------------------------------
 If sending email fails with certain (pre-defined) response codes the message be
