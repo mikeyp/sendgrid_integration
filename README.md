@@ -69,6 +69,9 @@ In order to send HTML email. Your installation of Drupal must generate an email
 with the proper headers. Sendgrid Integration modules looks for the content type
 of the email to be set to "text/html" in the header (i.e. "Content-Type"="text/html").
 
+If the message does not have the content type set to "text/html" the message
+will be stripped of any tags and converted to text.
+
 
 OPTIONAL
 --------------------------------------------------------------------------------
