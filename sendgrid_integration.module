@@ -21,6 +21,13 @@ function sendgrid_integration_menu() {
     'page arguments' => ['sendgrid_integration_admin'],
     'access callback' => 'user_access',
     'access arguments' => ['administer sendgrid settings'],
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 1,
+  ];
+  $items['admin/config/services/sendgrid/default'] = [
+    'title' => 'Administer SendGrid Integration',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
   ];
   $items['admin/config/services/sendgrid/test'] = [
     'title' => 'SendGrid Test Email Send',
@@ -31,6 +38,7 @@ function sendgrid_integration_menu() {
     'access arguments' => ['administer sendgrid settings'],
     'file' => 'sendgrid_integration.admin.inc',
     'type' => MENU_LOCAL_TASK,
+    'weight' => 50,
   ];
   return $items;
 }
