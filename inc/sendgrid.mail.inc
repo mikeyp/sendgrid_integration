@@ -114,16 +114,11 @@ class SendGridMailSystem implements MailSystemInterface {
     }
 
     // If there are multiple recipients we use a different method for To:
-    if (strpos(',', $message['to'])) {
+    if (strpos($message['to'], ',')) {
       $sendtosarry = explode(',', $message['to']);
-      foreach ($sendtosarry as $item) {
-        $firsttoaddress = sendgrid_integration_parse_address(array_shift($item));
-        $sendgrid_message->addTo($firsttoaddress[0]);
-        if (!empty($firsttoaddress[1])) {
-          $sendgrid_message->addToName($firsttoaddress[1]);
-        }
-        $sendgrid_message->setSmtpapiTos($sendtosarry);
-      }
+      // Don't bother putting anything in "to" and "toName" for
+      // multiple addresses. Only put multiple addresses in the Smtp header.
+      $sendgrid_message->setSmtpapiTos($sendtosarry);
     }
     else {
       $toaddrarray = sendgrid_integration_parse_address($message['to']);
@@ -259,7 +254,7 @@ class SendGridMailSystem implements MailSystemInterface {
           $record->body .= $divider;
           $bodydevel = 'Body Plain Text' . "\n" . $sendgrid_message->getText();
         }
-        
+
         // List the attachments.
         if (!empty($attachments)) {
           $record->body .= "\n";
