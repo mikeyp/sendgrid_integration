@@ -15,7 +15,7 @@ class SendgridIntegrationTestCaseMail extends SendgridIntegrationTestCase {
    */
   public static function getInfo() {
     return [
-      'name' => 'Mail Tests',
+      'name' => 'Sendgrid Integration Mail Tests',
       'description' => 'Test mail functions.',
       'group' => 'Sendgrid Integration',
     ];

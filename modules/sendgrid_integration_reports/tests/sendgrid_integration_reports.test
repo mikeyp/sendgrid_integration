@@ -15,8 +15,8 @@ class SendgridIntegrationReportsTestCase extends SendgridIntegrationTestCase {
    */
   public static function getInfo() {
     return [
-      'name' => t('Sendgrid Integration Reports tests'),
-      'description' => t('TODO: write me.'),
+      'name' => t('Sendgrid Integration Reports Tests'),
+      'description' => t('Test the function of the generated reports and web services.'),
       'group' => t('Sendgrid Integration'),
     ];
   }

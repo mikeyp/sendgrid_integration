@@ -24,7 +24,18 @@ class SendgridIntegrationTestCase extends DrupalWebTestCase {
   protected $web_user;
 
   /**
-   * Implements setUp().
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return [
+      'name' => 'Sendgrid Integration Tests',
+      'description' => 'Tests core setup functions.',
+      'group' => 'Sendgrid Integration',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
    */
   function setUp() {
     // Call the parent with an array of modules to enable for the test.
@@ -47,5 +58,7 @@ class SendgridIntegrationTestCase extends DrupalWebTestCase {
     $this->drupalPost('user/' . $this->admin_user->uid . '/edit', ['roles[3]' => TRUE], t('Save'));
 
   }
+
+
 
 }
