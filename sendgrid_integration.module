@@ -68,6 +68,7 @@ function sendgrid_integration_admin() {
 
   $form['authentication']['sendgrid_integration_apikey'] = [
     '#type' => 'password',
+    '#required' => TRUE,
     '#title' => t('API Secret Key'),
     '#description' => t('The secret key of your key pair. These are only generated once by Sendgrid. Your existing key is hidden. If you need to change this, provide a new key here.'),
   ];
