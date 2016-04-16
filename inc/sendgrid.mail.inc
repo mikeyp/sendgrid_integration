@@ -29,6 +29,10 @@ class SendGridMailSystem implements MailSystemInterface {
   public function mail(array $message) {
 
     $key_secret = variable_get('sendgrid_integration_apikey', '');
+    if (empty($key_secret)){
+      // Set a warning int he logs of there is no key.
+      watchdog('sendgrid_integration', t('No API Secret key has been set'), 'warning');
+    }
     $options = [
       'turn_off_ssl_verification' => FALSE,
       'protocol' => 'https',
