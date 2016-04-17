@@ -405,6 +405,8 @@ class SendGridMailSystem implements MailSystemInterface {
    * Returns the string from within $source that is some where after $target
    * and is between $beginning_character and $ending_character.
    *
+   * Swiped from SMTP module. Thanks!
+   *
    * @param $source
    *   A string containing the text to look through.
    * @param $target
@@ -429,6 +431,39 @@ class SendGridMailSystem implements MailSystemInterface {
     }
 
     return $substring;
-  }  //  End of _smtp_get_substring().
+  }
+
+  /**
+   * Splits the input into parts based on the given boundary.
+   *
+   * Swiped from Mail::MimeDecode, with modifications based on Drupal's coding
+   * standards and this bug report: http://pear.php.net/bugs/bug.php?id=6495
+   *
+   * @param input
+   *   A string containing the body text to parse.
+   * @param boundary
+   *   A string with the boundary string to parse on.
+   * @return array
+   *   An array containing the resulting mime parts
+   */
+  protected function _boundary_split($input, $boundary) {
+    $parts       = array();
+    $bs_possible = drupal_substr($boundary, 2, -2);
+    $bs_check    = '\"' . $bs_possible . '\"';
+
+    if ($boundary == $bs_check) {
+      $boundary = $bs_possible;
+    }
+
+    $tmp = explode('--' . $boundary, $input);
+
+    for ($i = 1; $i < count($tmp); $i++) {
+      if (trim($tmp[$i])) {
+        $parts[] = $tmp[$i];
+      }
+    }
+
+    return $parts;
+  }
 
 }
