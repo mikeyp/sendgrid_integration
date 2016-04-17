@@ -29,9 +29,11 @@ class SendGridMailSystem implements MailSystemInterface {
   public function mail(array $message) {
 
     $key_secret = variable_get('sendgrid_integration_apikey', '');
-    if (empty($key_secret)){
+    if (empty($key_secret)) {
       // Set a warning int he logs of there is no key.
       watchdog('sendgrid_integration', t('No API Secret key has been set'), 'warning');
+      // Return false to indicate message was not able to send.
+      return FALSE;
     }
     $options = [
       'turn_off_ssl_verification' => FALSE,
@@ -166,10 +168,10 @@ class SendGridMailSystem implements MailSystemInterface {
     if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
       $sendgrid_message->setHtml($message['body']);
     }
-    else {
-      // Message body is text/plain.
-      $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
-    }
+
+    // Always send a message body in text/plain.
+    $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+
 
     // Prepare attachments.
     $attachments = [];
