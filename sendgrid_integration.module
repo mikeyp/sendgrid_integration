@@ -150,10 +150,10 @@ function sendgrid_integration_admin_submit($form, $form_state) {
   if (!empty($form_state['values']['sendgrid_integration_apikey_id'])) {
     variable_set('sendgrid_integration_apikey_id', check_plain($form_state['values']['sendgrid_integration_apikey_id']));
   }
-  if (isset($form_state['values']['sendgrid_integration_maillog_log']) && !empty($form_state['values']['sendgrid_integration_maillog_log'])) {
+  if (isset($form_state['values']['sendgrid_integration_maillog_log'])) {
     variable_set('sendgrid_integration_maillog_log', check_plain($form_state['values']['sendgrid_integration_maillog_log']));
   }
-  if (isset($form_state['values']['sendgrid_integration_maillog_devel']) && !empty($form_state['values']['sendgrid_integration_maillog_devel'])) {
+  if (isset($form_state['values']['sendgrid_integration_maillog_devel'])) {
     variable_set('sendgrid_integration_maillog_devel', check_plain($form_state['values']['sendgrid_integration_maillog_devel']));
   }
   $existingkey = variable_get('sendgrid_integration_apikey', '');
