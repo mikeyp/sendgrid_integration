@@ -176,8 +176,27 @@ class SendGridMailSystem implements MailSystemInterface {
               // Get the boundary ID from the Content-Type header.
               $boundary = $this->_get_substring($value, 'boundary', '"', '"');
 
-
               // Parse text and HTML portions
+
+              // Split the body based on the boundary ID.
+              $body_parts = $this->_boundary_split($message['body'], $boundary);
+              foreach ($body_parts as $body_part) {
+                // If plain/text within the body part, add it to $mailer->AltBody.
+                if (strpos($body_part, 'text/plain')) {
+                  // Clean up the text.
+                  $body_part = trim($this->_remove_headers(trim($body_part)));
+                  // Include it as part of the mail object.
+                  $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part));
+                }
+                // If plain/html within the body part, add it to $mailer->Body.
+                elseif (strpos($body_part, 'text/html')) {
+                  // Clean up the text.
+                  $body_part = trim($this->_remove_headers(trim($body_part)));
+                  // Include it as part of the mail object.
+                  $sendgrid_message->setHtml($body_part);
+                }
+              }
+
 
               break;
             case 'multipart/mixed':
@@ -447,9 +466,9 @@ class SendGridMailSystem implements MailSystemInterface {
    *   An array containing the resulting mime parts
    */
   protected function _boundary_split($input, $boundary) {
-    $parts       = array();
+    $parts = [];
     $bs_possible = drupal_substr($boundary, 2, -2);
-    $bs_check    = '\"' . $bs_possible . '\"';
+    $bs_check = '\"' . $bs_possible . '\"';
 
     if ($boundary == $bs_check) {
       $boundary = $bs_possible;
