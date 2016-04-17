@@ -186,7 +186,7 @@ class SendGridMailSystem implements MailSystemInterface {
                   // Clean up the text.
                   $body_part = trim($this->_remove_headers(trim($body_part)));
                   // Include it as part of the mail object.
-                  $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part));
+                  $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part)));
                 }
                 // If plain/html within the body part, add it to $mailer->Body.
                 elseif (strpos($body_part, 'text/html')) {
