@@ -400,7 +400,7 @@ class SendGridMailSystem implements MailSystemInterface {
           $record->body .= $divider;
           $record->body .= $divider;
         }
-        elseif (!empty($sendgrid_message->getText())) {
+        if (!empty($sendgrid_message->getText())) {
           // Message body is text/plain.
           $record->body .= 'Body Plain Text' . "\n";
           $record->body .= $divider;
