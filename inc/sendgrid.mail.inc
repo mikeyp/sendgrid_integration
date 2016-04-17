@@ -202,10 +202,8 @@ class SendGridMailSystem implements MailSystemInterface {
               break;
 
             case 'multipart/mixed':
-              dpm($value);
               // Get the boundary ID from the Content-Type header.
               $boundary = $this->_get_substring($value, 'boundary', '"', '"');
-              dpm($boundary);
               // Split the body based on the boundary ID.
               $body_parts = $this->_boundary_split($message['body'], $boundary);
 
@@ -250,7 +248,6 @@ class SendGridMailSystem implements MailSystemInterface {
                   if (strpos($body_part, 'text/plain')) {
                     // Clean up the text.
                     $body_part = trim($this->_remove_headers(trim($body_part)));
-                    //dpm($body_part);
                     // Set the text message.
                     $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part)));
                   }
@@ -258,7 +255,6 @@ class SendGridMailSystem implements MailSystemInterface {
                   elseif (strpos($body_part, 'text/html')) {
                     // Clean up the text.
                     $body_part = trim($this->_remove_headers(trim($body_part)));
-                    //dpm($body_part);
                     // Set the HTML message.
                     $sendgrid_message->setHtml($body_part);
                   }
