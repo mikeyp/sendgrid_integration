@@ -203,19 +203,33 @@ class SendGridMailSystem implements MailSystemInterface {
               // Get the boundary ID from the Content-Type header.
               $boundary = $this->_get_substring($value, 'boundary', '"', '"');
 
-
+              // Split the body based on the boundary ID.
+              $body_parts = $this->_boundary_split($message['body'], $boundary);
+              
               // Parse text and HTML portions
-
+              foreach ($body_parts as $body_part) {
+                // If text/plain within the body part, add it to $mailer->Body.
+                if (strpos($body_part, 'text/plain')) {
+                  // Clean up the text.
+                  $body_part = trim($this->_remove_headers(trim($body_part)));
+                  // Set the text message.
+                  $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part)));
+                }
+                // If text/html within the body part, add it to $mailer->Body.
+                elseif (strpos($body_part, 'text/html')) {
+                  // Clean up the text.
+                  $body_part = trim($this->_remove_headers(trim($body_part)));
+                  // Set the HTML message.
+                  $sendgrid_message->setHtml($body_part);
+                }
+              }
               break;
             default:
               // Everything else is unsuppored by SendGrid.
-              drupal_set_message(t('The %header of your message is not supported by PHPMailer and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"]), 'error');
-              if ($logging) {
-                watchdog('smtp', 'The %header of your message is not supported by PHPMailer and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"], WATCHDOG_ERROR);
-              }
+              drupal_set_message(t('The %header of your message is not supported by SendGrid and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"]), 'error');
+              watchdog('sendgrid_integration', 'The %header of your message is not supported by PHPMailer and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"], WATCHDOG_ERROR);
               // Force the email to be text.
               $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
-              $content_type = 'text/plain';
           }
           break;
       }
@@ -484,5 +498,52 @@ class SendGridMailSystem implements MailSystemInterface {
 
     return $parts;
   }
+
+  /**
+   * Strips the headers from the body part.
+   *
+   * @param string $input
+   *   A string containing the body part to strip.
+   * @return string
+   *   A string with the stripped body part.
+   */
+  protected function _remove_headers($input) {
+    $part_array = explode("\n", $input);
+
+    // will strip these headers according to RFC2045
+    $headers_to_strip = [
+      'Content-Type',
+      'Content-Transfer-Encoding',
+      'Content-ID',
+      'Content-Disposition',
+    ];
+    $pattern = '/^(' . implode('|', $headers_to_strip) . '):/';
+
+    while (count($part_array) > 0) {
+
+      // ignore trailing spaces/newlines
+      $line = rtrim($part_array[0]);
+
+      // if the line starts with a known header string
+      if (preg_match($pattern, $line)) {
+        $line = rtrim(array_shift($part_array));
+        // remove line containing matched header.
+
+        // if line ends in a ';' and the next line starts with four spaces, it's a continuation
+        // of the header split onto the next line. Continue removing lines while we have this condition.
+        while (substr($line, -1) == ';' && count($part_array) > 0 && substr($part_array[0], 0, 4) == '    ') {
+          $line = rtrim(array_shift($part_array));
+        }
+      }
+      else {
+        // no match header, must be past headers; stop searching.
+        break;
+      }
+    }
+
+    $output = implode("\n", $part_array);
+    return $output;
+  }
+
 
 }
