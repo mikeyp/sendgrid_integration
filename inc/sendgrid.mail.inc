@@ -160,21 +160,24 @@ class SendGridMailSystem implements MailSystemInterface {
               $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
               $content_type = 'text/plain';
               break;
+
             case 'text/html':
               // The message includes only an HTML part.
               $sendgrid_message->setHtml($message['body']);
               $content_type = 'text/html';
               break;
+
             case 'multipart/related':
               // Get the boundary ID from the Content-Type header.
-              $boundary = $this->_get_substring($value, 'boundary', '"', '"');
+              $boundary = $this->_get_substring($message['body'], 'boundary', '"', '"');
 
               // Parse text and HTML portions
 
               break;
+
             case 'multipart/alternative':
               // Get the boundary ID from the Content-Type header.
-              $boundary = $this->_get_substring($value, 'boundary', '"', '"');
+              $boundary = $this->_get_substring($message['body'], 'boundary', '"', '"');
 
               // Parse text and HTML portions
 
@@ -196,34 +199,73 @@ class SendGridMailSystem implements MailSystemInterface {
                   $sendgrid_message->setHtml($body_part);
                 }
               }
-
-
               break;
+
             case 'multipart/mixed':
+              dpm($value);
               // Get the boundary ID from the Content-Type header.
               $boundary = $this->_get_substring($value, 'boundary', '"', '"');
-
+              dpm($boundary);
               // Split the body based on the boundary ID.
               $body_parts = $this->_boundary_split($message['body'], $boundary);
-              
+
               // Parse text and HTML portions
               foreach ($body_parts as $body_part) {
-                // If text/plain within the body part, add it to $mailer->Body.
-                if (strpos($body_part, 'text/plain')) {
+                if (strpos($body_part, 'multipart/alternative')) {
+                  // Get the second boundary ID from the Content-Type header.
+                  $boundary2 = $this->_get_substring($body_part, 'boundary', '"', '"');
                   // Clean up the text.
                   $body_part = trim($this->_remove_headers(trim($body_part)));
-                  // Set the text message.
-                  $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part)));
+                  // Split the body based on the internal boundary ID.
+                  $body_parts2 = $this->_boundary_split($body_part, $boundary2);
+
+                  // Process the internal parts.
+                  foreach ($body_parts2 as $body_part2) {
+                    // If plain/text within the body part, add it to $mailer->AltBody.
+                    if (strpos($body_part2, 'text/plain')) {
+                      // Clean up the text.
+                      $body_part2 = trim($this->_remove_headers(trim($body_part2)));
+
+                      $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part2)));
+                    }
+                    // If plain/html within the body part, add it to $mailer->Body.
+                    elseif (strpos($body_part2, 'text/html')) {
+                      // Get the encoding.
+                      $body_part2_encoding = trim($this->_get_substring($body_part2, 'Content-Transfer-Encoding', ':', "\n"));
+                      // Clean up the text.
+                      $body_part2 = trim($this->_remove_headers(trim($body_part2)));
+                      // Check whether the encoding is base64, and if so, decode it.
+                      if (drupal_strtolower($body_part2_encoding) == 'base64') {
+                        // Include it as part of the mail object.
+                        $sendgrid_message->setHtml(base64_decode($body_part2));
+                      }
+                      else {
+                        $sendgrid_message->setHtml($body_part2);
+                      }
+                    }
+                  }
                 }
-                // If text/html within the body part, add it to $mailer->Body.
-                elseif (strpos($body_part, 'text/html')) {
-                  // Clean up the text.
-                  $body_part = trim($this->_remove_headers(trim($body_part)));
-                  // Set the HTML message.
-                  $sendgrid_message->setHtml($body_part);
+                else {
+                  // If text/plain within the body part, add it to $mailer->Body.
+                  if (strpos($body_part, 'text/plain')) {
+                    // Clean up the text.
+                    $body_part = trim($this->_remove_headers(trim($body_part)));
+                    //dpm($body_part);
+                    // Set the text message.
+                    $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part)));
+                  }
+                  // If text/html within the body part, add it to $mailer->Body.
+                  elseif (strpos($body_part, 'text/html')) {
+                    // Clean up the text.
+                    $body_part = trim($this->_remove_headers(trim($body_part)));
+                    //dpm($body_part);
+                    // Set the HTML message.
+                    $sendgrid_message->setHtml($body_part);
+                  }
                 }
               }
               break;
+
             default:
               // Everything else is unsuppored by SendGrid.
               drupal_set_message(t('The %header of your message is not supported by SendGrid and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"]), 'error');
@@ -282,7 +324,6 @@ class SendGridMailSystem implements MailSystemInterface {
     if (!empty($attachments)) {
       $sendgrid_message->setAttachments($attachments);
     }
-
     // Integration with the Maillog module to use for debugging.
     if (module_exists('maillog')) {
       if (variable_get('sendgrid_integration_maillog_log', TRUE)) {
@@ -298,7 +339,7 @@ class SendGridMailSystem implements MailSystemInterface {
         $record->sent_date = REQUEST_TIME;
 
         // Used to separate different portions of the body string.
-        $divider = str_repeat('-', 60) . "\n";
+        $divider = str_repeat('-', 120) . "\n";
         // Initialize object
         $record->body = '';
         // Load the attachments.
@@ -316,50 +357,65 @@ class SendGridMailSystem implements MailSystemInterface {
           $record->body .= 'To Address Names ' . $i . ' : ' . $item . "\n";
           $i++;
         }
+        $record->body .= $divider;
+        $record->body .= $divider;
         $fromaddresses = $sendgrid_message->getFrom(TRUE);
-
         if (is_array($fromaddresses)) {
           $i = 0;
           foreach ($fromaddresses as $key => $value) {
             $record->body .= 'From Address ' . $i . ' : ' . $key . "\n";
             $record->body .= 'From Names ' . $i . ' : ' . $value . "\n";
+            $record->body .= $divider;
+            $record->body .= $divider;
           }
         }
         else {
           $record->body .= 'From Address: ' . $fromaddresses . "\n";
+          $record->body .= $divider;
+          $record->body .= $divider;
         }
 
-        $record->body .= $divider;
-
-        if ($filters = $sendgrid_message->smtpapi->getFilters()) {
+        if (!empty($filters = $sendgrid_message->smtpapi->getFilters())) {
           $record->body .= 'Filters:' . "\n";
-          $record->body .= print_r($filters);
+          foreach ($filters as $item) {
+            $record->body .= print_r($item) . "\n";
+          }
+          $record->body .= $divider;
           $record->body .= $divider;
         }
         else {
           $record->body .= 'No Filters Declared.' . "\n";
           $record->body .= $divider;
+          $record->body .= $divider;
         }
 
+
+        $record->body .= 'Raw Message' . "\n";
+        $record->body .= $divider;
+        $record->body .= $message['body'];
+        $record->body .= $divider;
+        $record->body .= $divider;
+
         // Check Content-Type of message body and get the appropriate content.
-        if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
+        if (!empty($sendgrid_message->getHtml())) {
           $record->body .= 'Body HTML' . "\n";
-          $record->body .= $sendgrid_message->getHtml();
           $record->body .= $divider;
-          $bodydevel = 'Body HTML' . "\n" . $sendgrid_message->getHtml();
+          $record->body .= $sendgrid_message->getHtml() . "\n";
+          $record->body .= $divider;
+          $record->body .= $divider;
         }
-        else {
+        elseif (!empty($sendgrid_message->getText())) {
           // Message body is text/plain.
           $record->body .= 'Body Plain Text' . "\n";
-          $record->body .= $sendgrid_message->getText();
           $record->body .= $divider;
-          $bodydevel = 'Body Plain Text' . "\n" . $sendgrid_message->getText();
+          $record->body .= $sendgrid_message->getText() . "\n";
+          $record->body .= $divider;
+          $record->body .= $divider;
         }
 
         // List the attachments.
         if (!empty($attachments)) {
-          $record->body .= "\n";
-          $record->body .= $divider;
+
           $record->body .= t('Attachments') . ":\n";
           $record->body .= $divider;
           foreach ($attachments as $file) {
@@ -369,13 +425,22 @@ class SendGridMailSystem implements MailSystemInterface {
             $record->body .= t('Basename') . ':' . $file['basename'] . "\n";
             $record->body .= "\n";
           }
+          $record->body .= $divider;
+          $record->body .= $divider;
         }
-
         drupal_write_record('maillog', $record);
       }
 
       // Display the e-mail using Devel module.
       if (variable_get('sendgrid_integration_maillog_devel', TRUE) && function_exists('dpm')) {
+        $bodydevel = '';
+        // Check Content-Type of message body and get the appropriate content.
+        if (!empty($sendgrid_message->getHtml())) {
+          $bodydevel .= 'Body HTML' . "\n" . $divider . "\n" . $sendgrid_message->getHtml() . $divider;
+        }
+        elseif (!empty($sendgrid_message->getText())) {
+          $bodydevel .= 'Body Plain Text' . "\n" . $divider . "\n" . $sendgrid_message->getText() . $divider;
+        }
         $devel_msg = [];
         $devel_msg[t('Subject')] = $sendgrid_message->getSubject();
         $devel_msg[t('From')] = $sendgrid_message->getFrom();
