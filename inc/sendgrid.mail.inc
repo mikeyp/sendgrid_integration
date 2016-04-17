@@ -138,6 +138,69 @@ class SendGridMailSystem implements MailSystemInterface {
     $cc_bcc_keys = ['cc', 'bcc'];
     $address_cc_bcc = [];
     foreach ($message['headers'] as $key => $value) {
+      switch (drupal_strtolower($key)) {
+        case 'content-type':
+          // Parse several values on the Content-type header, storing them in an array like
+          // key=value -> $vars['key']='value'
+          $vars = explode(';', $value);
+          foreach ($vars as $i => $var) {
+            if ($cut = strpos($var, '=')) {
+              $new_var = trim(drupal_strtolower(drupal_substr($var, $cut + 1)));
+              $new_key = trim(drupal_substr($var, 0, $cut));
+              unset($vars[$i]);
+              $vars[$new_key] = $new_var;
+            }
+          }
+          // If $vars is empty then set an empty value at index 0 to avoid a PHP warning in the next statement
+          $vars[0] = isset($vars[0]) ? $vars[0] : '';
+
+          switch ($vars[0]) {
+            case 'text/plain':
+              // The message includes only a plain text part.
+              $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+              $content_type = 'text/plain';
+              break;
+            case 'text/html':
+              // The message includes only an HTML part.
+              $sendgrid_message->setHtml($message['body']);
+              $content_type = 'text/html';
+              break;
+            case 'multipart/related':
+              // Get the boundary ID from the Content-Type header.
+              $boundary = $this->_get_substring($value, 'boundary', '"', '"');
+
+              // Parse text and HTML portions
+
+              break;
+            case 'multipart/alternative':
+              // Get the boundary ID from the Content-Type header.
+              $boundary = $this->_get_substring($value, 'boundary', '"', '"');
+
+
+              // Parse text and HTML portions
+
+              break;
+            case 'multipart/mixed':
+              // Get the boundary ID from the Content-Type header.
+              $boundary = $this->_get_substring($value, 'boundary', '"', '"');
+
+
+              // Parse text and HTML portions
+
+              break;
+            default:
+              // Everything else is unsuppored by SendGrid.
+              drupal_set_message(t('The %header of your message is not supported by PHPMailer and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"]), 'error');
+              if ($logging) {
+                watchdog('smtp', 'The %header of your message is not supported by PHPMailer and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"], WATCHDOG_ERROR);
+              }
+              // Force the email to be text.
+              $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+              $content_type = 'text/plain';
+          }
+          break;
+      }
+
       // handle latter case issue for cc and bcc key
       if (in_array(drupal_strtolower($key), $cc_bcc_keys)) {
         $mail_ids = explode(',', $value);
@@ -163,16 +226,15 @@ class SendGridMailSystem implements MailSystemInterface {
       }
     }
 
+    /*
+        // Check Content-Type of message body.
+        if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
+          $sendgrid_message->setHtml($message['body']);
+        }
 
-    // Check Content-Type of message body.
-    if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
-      $sendgrid_message->setHtml($message['body']);
-    }
-
-    // Always send a message body in text/plain.
-    $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
-
-
+        // Always send a message body in text/plain.
+        $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+    */
     // Prepare attachments.
     $attachments = [];
     if (isset($message['attachments']) && !empty($message['attachments'])) {
@@ -336,5 +398,37 @@ class SendGridMailSystem implements MailSystemInterface {
     // Default to low. Sending failed.
     return FALSE;
   }
+
+  /**
+   * Returns a string that is contained within another string.
+   *
+   * Returns the string from within $source that is some where after $target
+   * and is between $beginning_character and $ending_character.
+   *
+   * @param $source
+   *   A string containing the text to look through.
+   * @param $target
+   *   A string containing the text in $source to start looking from.
+   * @param $beginning_character
+   *   A string containing the character just before the sought after text.
+   * @param $ending_character
+   *   A string containing the character just after the sought after text.
+   * @return string
+   *   A string with the text found between the $beginning_character and the
+   *   $ending_character.
+   */
+  protected function _get_substring($source, $target, $beginning_character, $ending_character) {
+    $search_start = strpos($source, $target) + 1;
+    $first_character = strpos($source, $beginning_character, $search_start) + 1;
+    $second_character = strpos($source, $ending_character, $first_character) + 1;
+    $substring = drupal_substr($source, $first_character, $second_character - $first_character);
+    $string_length = drupal_strlen($substring) - 1;
+
+    if ($substring[$string_length] == $ending_character) {
+      $substring = drupal_substr($substring, 0, $string_length);
+    }
+
+    return $substring;
+  }  //  End of _smtp_get_substring().
 
 }
