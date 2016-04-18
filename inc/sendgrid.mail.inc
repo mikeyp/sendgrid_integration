@@ -223,7 +223,6 @@ class SendGridMailSystem implements MailSystemInterface {
                     if (strpos($body_part2, 'text/plain')) {
                       // Clean up the text.
                       $body_part2 = trim($this->_remove_headers(trim($body_part2)));
-
                       $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part2)));
                     }
                     // If plain/html within the body part, add it to $mailer->Body.
@@ -234,10 +233,11 @@ class SendGridMailSystem implements MailSystemInterface {
                       $body_part2 = trim($this->_remove_headers(trim($body_part2)));
                       // Check whether the encoding is base64, and if so, decode it.
                       if (drupal_strtolower($body_part2_encoding) == 'base64') {
-                        // Include it as part of the mail object.
+                        // Save the decoded HTML content.
                         $sendgrid_message->setHtml(base64_decode($body_part2));
                       }
                       else {
+                        // Save the HTML content.
                         $sendgrid_message->setHtml($body_part2);
                       }
                     }
@@ -263,7 +263,7 @@ class SendGridMailSystem implements MailSystemInterface {
               break;
 
             default:
-              // Everything else is unsuppored by SendGrid.
+              // Everything else is unknown so we log and send the message as text.
               drupal_set_message(t('The %header of your message is not supported by SendGrid and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"]), 'error');
               watchdog('sendgrid_integration', 'The %header of your message is not supported by PHPMailer and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"], WATCHDOG_ERROR);
               // Force the email to be text.
@@ -272,7 +272,7 @@ class SendGridMailSystem implements MailSystemInterface {
           break;
       }
 
-      // handle latter case issue for cc and bcc key
+      // Handle latter case issue for cc and bcc key
       if (in_array(drupal_strtolower($key), $cc_bcc_keys)) {
         $mail_ids = explode(',', $value);
         foreach ($mail_ids as $mail_id) {
@@ -297,15 +297,6 @@ class SendGridMailSystem implements MailSystemInterface {
       }
     }
 
-    /*
-        // Check Content-Type of message body.
-        if (strpos($message['headers']['Content-Type'], 'text/html') !== FALSE) {
-          $sendgrid_message->setHtml($message['body']);
-        }
-
-        // Always send a message body in text/plain.
-        $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
-    */
     // Prepare attachments.
     $attachments = [];
     if (isset($message['attachments']) && !empty($message['attachments'])) {
