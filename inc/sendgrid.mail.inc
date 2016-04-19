@@ -137,6 +137,8 @@ class SendGridMailSystem implements MailSystemInterface {
     //Add cc and bcc in mail if they exist.
     $cc_bcc_keys = ['cc', 'bcc'];
     $address_cc_bcc = [];
+
+    // Beginning of consolidated header parsing.
     foreach ($message['headers'] as $key => $value) {
       switch (drupal_strtolower($key)) {
         case 'content-type':
@@ -153,7 +155,8 @@ class SendGridMailSystem implements MailSystemInterface {
           }
           // If $vars is empty then set an empty value at index 0 to avoid a PHP warning in the next statement
           $vars[0] = isset($vars[0]) ? $vars[0] : '';
-
+          // Nested switch to process the various content types. We only care
+          // about the first entry in the array.
           switch ($vars[0]) {
             case 'text/plain':
               // The message includes only a plain text part.
@@ -163,13 +166,14 @@ class SendGridMailSystem implements MailSystemInterface {
             case 'text/html':
               // The message includes only an HTML part.
               $sendgrid_message->setHtml($message['body']);
+              // Also include a text only version of the email.
+              $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
               break;
 
             case 'multipart/related':
+              // @todo determine how to handle this content type.
               // Get the boundary ID from the Content-Type header.
               $boundary = $this->_get_substring($message['body'], 'boundary', '"', '"');
-
-              // Parse text and HTML portions
 
               break;
 
@@ -242,6 +246,9 @@ class SendGridMailSystem implements MailSystemInterface {
                   }
                 }
                 else {
+                  // This parses the message if there is no internal content
+                  // type set after the multipart/mixed.
+
                   // If text/plain within the body part, add it to $mailer->Body.
                   if (strpos($body_part, 'text/plain')) {
                     // Clean up the text.
