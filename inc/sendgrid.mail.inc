@@ -158,13 +158,11 @@ class SendGridMailSystem implements MailSystemInterface {
             case 'text/plain':
               // The message includes only a plain text part.
               $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
-              $content_type = 'text/plain';
               break;
 
             case 'text/html':
               // The message includes only an HTML part.
               $sendgrid_message->setHtml($message['body']);
-              $content_type = 'text/html';
               break;
 
             case 'multipart/related':
