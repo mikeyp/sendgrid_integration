@@ -2,16 +2,16 @@ SendGrid Integration for Drupal
 --------------------------------------------------------------------------------
 This project is not affiliated with SendGrid, Inc.
 
-Use the issue tracker located at Drupal.org
-(https://www.drupal.org/sendgrid_integration) for bug reports or questions
-about this module.
-If you want more info about SendGrid services, contact SendGrid
-(https://sendgrid.com).
+Use the issue tracker located at [Drupal.org](https://www.drupal.org/sendgrid_integration) 
+for bug reports or questions about this module. If you want more info about 
+SendGrid services, contact [SendGrid](https://sendgrid.com).
 
 FUNCTIONALITY
 --------------------------------------------------------------------------------
 This module overrides default email sending behaviour and sending emails through
-SendGrid Transactional Email service instead.
+SendGrid Transactional Email service instead. Emails are sent via a web service
+and does not function like SMTP therefore there are certain caveats with other
+email formating modules. Read below for details.
 
 Failures to send are re-queued for sending later. Queue of failed messages are
 run on a 60 minute interval.
@@ -68,9 +68,24 @@ HTML Email
 In order to send HTML email. Your installation of Drupal must generate an email
 with the proper headers. Sendgrid Integration modules looks for the content type
 of the email to be set to "text/html" in the header (i.e. "Content-Type"="text/html").
+A text version of the email is also sent at the same time.
 
 If the message does not have the content type set to "text/html" the message
 will be stripped of any tags and converted to text.
+
+We recommend using the module [HTMLmail](https://www.drupal.org/project/htmlmail)
+for HTML formating of emails. This module allows for easy templating of emails
+and it sets the correct header on emails (text/html).
+
+We do not recommend MIMEmail module because it sets the content-type header of a
+message to "multipart/mixed" instead of strictly "text/html". In addition, the
+MIMEmail module attempts to template emails and include inline CSS that is not
+compatible with SendGrid template system. If you want to use
+MIMEmail, we suggest using the [SMTP module](https://www.drupal.org/project/smtp)
+and not this module.
+
+If you want to work on a solution for MIMEmail and contribute it back to the
+module, we gladly accept community contributions!
 
 
 OPTIONAL
