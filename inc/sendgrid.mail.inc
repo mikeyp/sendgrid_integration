@@ -115,9 +115,6 @@ class SendGridMailSystem implements MailSystemInterface {
     if (!empty($data['fromname'])) {
       $sendgrid_message->setFromName($data['fromname']);
     }
-    if (isset($message['headers']['Reply-To'])) {
-      $sendgrid_message->setReplyTo($message['headers']['Reply-To']);
-    }
 
     // If there are multiple recipients we use a different method for To:
     if (strpos($message['to'], ',')) {
@@ -274,6 +271,10 @@ class SendGridMailSystem implements MailSystemInterface {
               // Force the email to be text.
               $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
           }
+          break;
+
+        case 'reply-to':
+          $sendgrid_message->setReplyTo($message['headers']['Reply-To']);
           break;
       }
 
