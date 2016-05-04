@@ -50,9 +50,15 @@ function sendgrid_integration_update_7001() {
     drupal_set_message($t('Install Composer Manager before upgrading (https://www.drupal.org/project/composer_manager)'), 'error');
     exit;
   }
-  // Emptying old variables.
-  variable_set('sendgrid_integration_apikey', '');
   // Deleting unused variables.
   variable_del('sendgrid_integration_ssl');
   variable_del('sendgrid_integration_username');
+}
+
+/**
+ * Remove variables no longer used.
+ */
+function sendgrid_integration_update_7002() {
+  // Emptying old variables.
+  variable_del('sendgrid_integration_apikey_id', '');
 }
