@@ -65,17 +65,14 @@ class SendgridIntegrationTestCase extends DrupalWebTestCase {
   function testSendGridIntegrationAPISetup() {
     // Add API information.
     $edit = [];
-    $edit['sendgrid_integration_apikey_id'] = $this->randomName(8);
     $secret = '12314512312asdfqewr1234qerqafd';
     $edit['sendgrid_integration_apikey'] = $secret;
     $this->drupalPost('admin/config/services/sendgrid', $edit, t('Save Settings'));
     $this->assertText(t('SendGrid Settings Saved'), t('SendGrid API Settings Saved.'));
-    variable_del('sendgrid_integration_apikey_id');
     variable_del('sendgrid_integration_apikey');
 
     // Attempt to add API information but no secret key.
     $edit = [];
-    $edit['sendgrid_integration_apikey_id'] = $this->randomName(8);
     $this->drupalPost('admin/config/services/sendgrid', $edit, t('Save Settings'));
     $this->assertText(t('API Secret Key field is required.'), t('SendGrid API Settings Rejected save without secret key.'));
   }
