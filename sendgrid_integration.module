@@ -140,9 +140,6 @@ function sendgrid_integration_admin_validate($form, &$form_state) {
  * @return bool
  */
 function sendgrid_integration_admin_submit($form, $form_state) {
-  if (!empty($form_state['values']['sendgrid_integration_apikey_id'])) {
-    variable_set('sendgrid_integration_apikey_id', check_plain($form_state['values']['sendgrid_integration_apikey_id']));
-  }
   if (isset($form_state['values']['sendgrid_integration_maillog_log'])) {
     variable_set('sendgrid_integration_maillog_log', check_plain($form_state['values']['sendgrid_integration_maillog_log']));
   }
