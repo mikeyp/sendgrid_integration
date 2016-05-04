@@ -1,4 +1,10 @@
-7.x-1.0-alpha3 and beyond
+7.x-1.0-beta3
+================================================================================
+Upgrade to Beta3 prior to 4 May 2016 incorrectly deleted the API Key. The API
+key ID was the variable that should have been erased. This bug was fixed in the
+upgrade scripts but is documented here.
+
+7.x-1.0-alpha3
 ================================================================================
 
 Background
