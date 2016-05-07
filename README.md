@@ -53,7 +53,7 @@ line and the use of Drush.
    
 2. Navigate to Modules and enable SendGrid Integration in the Mail category.
 
-3. Configure your SendGrid Username and API-Key in admin/config/system/sendgrid
+3. Configure your SendGrid API-Key in admin/config/services/sendgrid
 
 4. Confirm that the mail system is setup to use Sendgrid for how you wish to run
    you website. If you want it all to run through Sendgrid then you set the
