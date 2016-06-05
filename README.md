@@ -2,8 +2,8 @@ SendGrid Integration for Drupal
 --------------------------------------------------------------------------------
 This project is not affiliated with SendGrid, Inc.
 
-Use the issue tracker located at [Drupal.org](https://www.drupal.org/sendgrid_integration) 
-for bug reports or questions about this module. If you want more info about 
+Use the issue tracker located at [Drupal.org](https://www.drupal.org/sendgrid_integration)
+for bug reports or questions about this module. If you want more info about
 SendGrid services, contact [SendGrid](https://sendgrid.com).
 
 FUNCTIONALITY
@@ -25,10 +25,10 @@ basis.
 
 Composer is the definitive source for PHP dependencies, but implementing
 Composer in modules is difficult to say the least. Composer typically acts over
-an entire project - in this case it would be your entire Drupal source code. 
+an entire project - in this case it would be your entire Drupal source code.
 Composer manager allows for modules to declare their own composer.json file
 rather than a project global composer.json.
-  
+
   Composer is being used because of the usefulness it offers:
   https://www.acquia.com/blog/using-composer-manager-get-island-now
 
@@ -45,12 +45,12 @@ line and the use of Drush.
 
 1. Move this folder under modules directory of your installation,
    example sites/all/modules or sites/default/modules
-   
+
 2. Install Dependencies which include Composer Manager. Use Drush to update
-   dependencies via composer `drush composer-manager update --no-dev`. 
-   This will download the Sendgrid API. It is important to use the --no-dev option so you 
-   do not download libariers that are used for development and testing only.
-   
+   dependencies via composer `drush composer-manager update --no-dev`.
+   This will download the Sendgrid API. It is important to use the --no-dev option so you
+   do not download libraries that are used for development and testing only.
+
 2. Navigate to Modules and enable SendGrid Integration in the Mail category.
 
 3. Configure your SendGrid API-Key in admin/config/services/sendgrid
