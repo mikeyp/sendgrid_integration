@@ -1,8 +1,8 @@
 {
-  "name": "drupal/contrib/sendgrid_integration",
+  "name": "drupal/sendgrid_integration",
   "description": "Example of using the SendGrid php library.",
   "homepage": "https://www.drupal.org/project/sendgrid_integration",
-  "license": "GNU",
+  "license": "GPL v2",
   "keywords": [
     "SendGrid",
     "sendgrid",
