@@ -1,0 +1,15 @@
+sendgrid_integration.settings:
+  type: config_object
+  mapping:
+    apikey:
+      type: string
+      label: 'API key'
+    test_defaults:
+      type: string
+      label: 'Test defaults'
+    maillog_log:
+      type: boolean
+      label: 'Whether or not to log mail using maillog module.'
+    maillog_devel:
+      type: string
+      label: 'Whether or not to display mail on the page using devel module.'

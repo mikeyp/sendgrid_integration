@@ -1,0 +1,4 @@
+apikey: ''
+test_defaults: ''
+maillog_log: true
+maillog_devel: true
