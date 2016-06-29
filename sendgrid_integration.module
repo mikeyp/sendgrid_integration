@@ -24,31 +24,6 @@ function sendgrid_integration_help($route_name, RouteMatchInterface $route_match
 
 //define('SENDGRID_INTEGRATION_EMAIL_REGEX', '/^\s*(.+?)\s*<\s*([^>]+)\s*>$/');
 
-///**
-// * Implements hook_menu().
-// */
-//function sendgrid_integration_menu() {
-//  $items = [];
-
-//  $items['admin/config/services/sendgrid/default'] = [
-//    'title' => 'Administer SendGrid Integration',
-//    'type' => MENU_DEFAULT_LOCAL_TASK,
-//    'weight' => 0,
-//  ];
-//  $items['admin/config/services/sendgrid/test'] = [
-//    'title' => 'SendGrid Test Email Send',
-//    'description' => 'Send a test email through sendgrid.',
-//    'page callback' => 'drupal_get_form',
-//    'page arguments' => ['sendgrid_integration_test'],
-//    'access callback' => 'user_access',
-//    'access arguments' => ['administer sendgrid settings'],
-//    'file' => 'sendgrid_integration.admin.inc',
-//    'type' => MENU_LOCAL_TASK,
-//    'weight' => 50,
-//  ];
-//  return $items;
-//}
-
 
 //
 ///**
@@ -93,21 +68,21 @@ function sendgrid_integration_help($route_name, RouteMatchInterface $route_match
 //  }
 //}
 //
-///**
-// * Implements hook_mail().
-// */
-//function sendgrid_integration_mail($key, &$message, $params) {
-//  $message['module'] = 'sendgrid_integration';
-//  $message['key'] = $key;
-//  $message['subject'] = $params['subject'];
-//  $message['body'] = explode(
-//    MAIL_LINE_ENDINGS . MAIL_LINE_ENDINGS,
-//    $params['body']
-//  );
-//  if ($params['include_test_attachment']) {
-//    $message['attachments'][] = drupal_realpath('misc/druplicon.png');
-//  }
-//  if (isset($params['Reply-To']) && !empty($params['Reply-To'])) {
-//    $message['headers']['Reply-To'] = $params['Reply-To'];
-//  }
-//}
+/**
+ * Implements hook_mail().
+ */
+function sendgrid_integration_mail($key, &$message, $params) {
+  $message['module'] = 'sendgrid_integration';
+  $message['key'] = $key;
+  $message['subject'] = $params['subject'];
+  $message['body'] = explode(
+    MAIL_LINE_ENDINGS . MAIL_LINE_ENDINGS,
+    $params['body']
+  );
+  if ($params['include_test_attachment']) {
+    $message['attachments'][] = drupal_realpath('misc/druplicon.png');
+  }
+  if (isset($params['Reply-To']) && !empty($params['Reply-To'])) {
+    $message['headers']['Reply-To'] = $params['Reply-To'];
+  }
+}
