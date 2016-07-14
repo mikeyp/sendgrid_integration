@@ -6,6 +6,3 @@ package: 'Mail'
 #configure" admin/config/services/sendgrid
 dependencies:
  - mailsystem:mailsystem (>=4.x)
-
-test_dependencies:
-  - maillog:maillog
