@@ -23,41 +23,6 @@ function sendgrid_integration_help($route_name, RouteMatchInterface $route_match
   return $output;
 }
 
-
-
-
-///**
-// * Implements hook_cron_queue_info().
-// */
-//function sendgrid_integration_cron_queue_info() {
-//  $queues = [];
-//  $queues['SendGridResendQueue'] = [
-//    'worker callback' => 'sendgrid_integration_email_resend',
-//    'time' => 60,
-//  ];
-//
-//  return $queues;
-//}
-
-///**
-// * Cron queue worker callback function.
-// * Tries to send email again, if it previously failed with good reason.
-// */
-//function sendgrid_integration_email_resend($message) {
-//  // Defining parameters first to improve code readability.
-//  $module = $message['module'];
-//  $key = $message['key'];
-//  $to = $message['to'];
-//  $language = $message['language'];
-//  $params = $message['params'];
-//  $from = $message['from'];
-//  $send = $message['send'];
-//
-//  drupal_mail($module, $key, $to, $language, $params, $from, $send);
-//}
-//
-
-
 /**
  * Implements hook_mail().
  */

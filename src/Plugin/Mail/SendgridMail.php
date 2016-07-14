@@ -3,13 +3,13 @@
 namespace Drupal\sendgrid_integration\Plugin\Mail;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\Component\Utility\Xss;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Queue\QueueFactory;
 use SendGrid\Email;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -42,11 +42,18 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
   protected $logger;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   *
    * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected $moduleHandler;
+
+  /**
+   * The queue factory service.
+   *
+   * @var \Drupal\Core\Queue\QueueFactory
+   */
+  protected $queueFactory;
 
   /**
    * SendGridMailSystem constructor.
@@ -64,11 +71,16 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
    *   The configuration factory service.
    * @param \Drupal\Core\logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler service.
+   * @param \Drupal\Core\Queue\QueueFactory $queueFactory
+   *   The queue factory service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $configFactory, LoggerChannelFactoryInterface $loggerChannelFactory, ModuleHandlerInterface $moduleHandler) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $configFactory, LoggerChannelFactoryInterface $loggerChannelFactory, ModuleHandlerInterface $moduleHandler, QueueFactory $queueFactory) {
     $this->configFactory  = $configFactory;
     $this->logger = $loggerChannelFactory->get('sendgrid_integration');
     $this->moduleHandler = $moduleHandler;
+    $this->queueFactory = $queueFactory;
   }
 
   /**
@@ -81,7 +93,8 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
       $plugin_definition,
       $container->get('config.factory'),
       $container->get('logger.factory'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('queue')
     );
   }
 
@@ -420,7 +433,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
         504,
       ];
       if (in_array($e->getCode(), $codes)) {
-        $queue = DrupalQueue::get('SendGridResendQueue')->createItem($message);
+        $this->queueFactory->get('SendGridResendQueue')->createItem($message);
       }
       return FALSE;
     }
