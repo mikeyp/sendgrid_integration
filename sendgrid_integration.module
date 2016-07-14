@@ -8,6 +8,7 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Site\Settings;
 
 /**
  * Implements hook_help().
@@ -22,10 +23,9 @@ function sendgrid_integration_help($route_name, RouteMatchInterface $route_match
   return $output;
 }
 
-//define('SENDGRID_INTEGRATION_EMAIL_REGEX', '/^\s*(.+?)\s*<\s*([^>]+)\s*>$/');
 
 
-//
+
 ///**
 // * Implements hook_cron_queue_info().
 // */
@@ -38,7 +38,7 @@ function sendgrid_integration_help($route_name, RouteMatchInterface $route_match
 //
 //  return $queues;
 //}
-//
+
 ///**
 // * Cron queue worker callback function.
 // * Tries to send email again, if it previously failed with good reason.
@@ -56,18 +56,8 @@ function sendgrid_integration_help($route_name, RouteMatchInterface $route_match
 //  drupal_mail($module, $key, $to, $language, $params, $from, $send);
 //}
 //
-///**
-// * Split an email address into it's name and address components.
-// */
-//function sendgrid_integration_parse_address($email) {
-//  if (preg_match(SENDGRID_INTEGRATION_EMAIL_REGEX, $email, $matches)) {
-//    return [$matches[2], $matches[1]];
-//  }
-//  else {
-//    return [$email, ' '];
-//  }
-//}
-//
+
+
 /**
  * Implements hook_mail().
  */
@@ -76,7 +66,7 @@ function sendgrid_integration_mail($key, &$message, $params) {
   $message['key'] = $key;
   $message['subject'] = $params['subject'];
   $message['body'] = explode(
-    MAIL_LINE_ENDINGS . MAIL_LINE_ENDINGS,
+    Settings::get('mail_line_endings', PHP_EOL) . Settings::get('mail_line_endings', PHP_EOL),
     $params['body']
   );
   if ($params['include_test_attachment']) {

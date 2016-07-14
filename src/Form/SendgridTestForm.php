@@ -136,6 +136,9 @@ class SendGridTestForm extends FormBase {
     $params = $config->get('test_defaults');
 
     $params['include_test_attachment'] = $form_state->getValue('include_attachment');
+
+    $params['body'] = check_markup($params['body']['value'], $params['body']['format']);
+
 //    // Setting a specific mail system for the SendGrid Integration Module.
 //    mailsystem_set(['sendgrid_integration' => 'SendGridMailSystem']);
 
@@ -146,7 +149,7 @@ class SendGridTestForm extends FormBase {
     else {
       $from = $site_settings->get('mail');
     }
-    $result = $this->mailManager->mail('sendgrid_integration', 'test', $config->get('test_deftauls.to'), $this->languageManager->getDefaultLanguage()->getId(), $params, $from);
+    $result = $this->mailManager->mail('sendgrid_integration', 'test', $config->get('test_defaults.to'), $this->languageManager->getDefaultLanguage()->getId(), $params, $from);
     if (isset($result['result']) && $result['result'] == TRUE) {
       drupal_set_message($this->t('SendGrid test email sent from %from to %to.', [
         '%from' => $from,

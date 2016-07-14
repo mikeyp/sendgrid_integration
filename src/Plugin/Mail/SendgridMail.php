@@ -2,9 +2,15 @@
 
 namespace Drupal\sendgrid_integration\Plugin\Mail;
 
+use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailInterface;
-use Drupal\Core\Site\Settings;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use SendGrid\Email;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -12,36 +18,70 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Implements Drupal MailSystemInterface.
  *
  * @Mail(
- *   id = "php_mail",
- *   label = @Translation("Default PHP mailer"),
- *   description = @Translation("Sends the message as plain text, using PHP's native mail() function.")
+ *   id = "sendgrid_integration",
+ *   label = @Translation("Sendgrid Integration"),
+ *   description = @Translation("Sends the message using Sendgrid API.")
  * )
  */
-class SendGridMail implements MailInterface {
+class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
+
+  const SENDGRID_INTEGRATION_EMAIL_REGEX = '/^\s*(.+?)\s*<\s*([^>]+)\s*>$/';
 
   /**
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * The config factory service.
    *
-   * The configuration factory service.
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
 
   /**
+   * The logger service for the sendgrid_integration module.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   *
+   * The module handler service.
+   */
+  protected $moduleHandler;
+
+  /**
    * SendGridMailSystem constructor.
    *
+   * @param array $configuration
+   *   The plugin configuration, i.e. an array with configuration values keyed
+   *   by configuration option name. The special key 'context' may be used to
+   *   initialize the defined contexts by setting it to an array of context
+   *   values keyed by context names.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The configuration factory service.
+   * @param \Drupal\Core\logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory service.
    */
-  public function __construct(ConfigFactoryInterface $configFactory) {
-    $this->configFactory = $configFactory;
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $configFactory, LoggerChannelFactoryInterface $loggerChannelFactory, ModuleHandlerInterface $moduleHandler) {
+    $this->configFactory  = $configFactory;
+    $this->logger = $loggerChannelFactory->get('sendgrid_integration');
+    $this->moduleHandler = $moduleHandler;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
-      $container->get('config.factory')
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('config.factory'),
+      $container->get('logger.factory'),
+      $container->get('module_handler')
     );
   }
 
@@ -66,11 +106,13 @@ class SendGridMail implements MailInterface {
    * @return bool
    */
   public function mail(array $message) {
+    $site_config = $this->configFactory->get('system.site');
+    $sendgrid_config = $this->configFactory->get('sendgrid_integration.settings');
 
-    $key_secret = variable_get('sendgrid_integration_apikey', '');
+    $key_secret = $sendgrid_config->get('apikey');
     if (empty($key_secret)) {
-      // Set a warning int he logs of there is no key.
-      watchdog('sendgrid_integration', t('No API Secret key has been set'), 'warning');
+      // Set a error in the logs if there is no API key.
+      $this->logger->error('No API Secret key has been set');
       // Return false to indicate message was not able to send.
       return FALSE;
     }
@@ -82,9 +124,9 @@ class SendGridMail implements MailInterface {
       'raise_exceptions' => FALSE,
     ];
     // Create a new SendGrid object.
-    $sendgrid = new SendGrid($key_secret, $options);
-    $sendgrid_message = new SendGrid\Email();
-    $sitename = variable_get('site_name');
+    $sendgrid = new \SendGrid($key_secret, $options);
+    $sendgrid_message = new Email();
+    $sitename = $site_config->get('name');
     // Defining default unique args.
     $unique_args = [
       'id' => $message['id'],
@@ -104,7 +146,7 @@ class SendGridMail implements MailInterface {
     }
 
     // Allow other modules to modify unique arguments.
-    $args = module_invoke_all('sendgrid_integration_unique_args_alter', $unique_args);
+    $args = $this->moduleHandler->invokeAll('sendgrid_integration_unique_args_alter', [$unique_args]);
 
     // Check if we got any variable back.
     if (!empty($args)) {
@@ -113,18 +155,18 @@ class SendGridMail implements MailInterface {
 
     // Checking if 'from' email-address already exist.
     if (isset($message['headers']['from']) || isset($message['headers']['From']) && $message['headers']['from'] = $message['headers']['From']) {
-      $fromaddrarray = sendgrid_integration_parse_address($message['headers']['from']);
+      $fromaddrarray = $this->parseAddress($message['headers']['from']);
       $data['from'] = $fromaddrarray[0];
       $data['fromname'] = $fromaddrarray[1];
     }
     else {
-      $data['from'] = variable_get('site_mail');
+      $data['from'] = $site_config->get('mail');
       $data['fromname'] = $sitename;
     }
 
     // Check if $send is set to be true.
     if ($message['send'] != 1) {
-      watchdog('SendGrid Integration', 'Email was not sent because send value was disabled', NULL, WATCHDOG_NOTICE, $link = NULL);
+      $this->logger->notice('Email was not sent because send value was disabled.');
       return TRUE;
     }
     // Build the Sendgrid mail object.
@@ -139,7 +181,7 @@ class SendGridMail implements MailInterface {
     ];
 
     // Allow other modules to modify categories.
-    $result = module_invoke_all('sendgrid_integration_categories_alter', $message, $categories);
+    $this->moduleHandler->invokeAll('sendgrid_integration_categories_alter', [$message, $categories]);
 
     // Check if we got any variable back.
     if (!empty($result)) {
@@ -163,7 +205,7 @@ class SendGridMail implements MailInterface {
       $sendgrid_message->setSmtpapiTos($sendtosarry);
     }
     else {
-      $toaddrarray = sendgrid_integration_parse_address($message['to']);
+      $toaddrarray = $this->parseAddress($message['to']);
       $sendgrid_message->addTo($toaddrarray[0]);
       if (!empty($toaddrarray[1])) {
         $sendgrid_message->addToName($toaddrarray[1]);
@@ -176,15 +218,15 @@ class SendGridMail implements MailInterface {
 
     // Beginning of consolidated header parsing.
     foreach ($message['headers'] as $key => $value) {
-      switch (drupal_strtolower($key)) {
+      switch (Unicode::strtolower($key)) {
         case 'content-type':
           // Parse several values on the Content-type header, storing them in an array like
           // key=value -> $vars['key']='value'
           $vars = explode(';', $value);
           foreach ($vars as $i => $var) {
             if ($cut = strpos($var, '=')) {
-              $new_var = trim(drupal_strtolower(drupal_substr($var, $cut + 1)));
-              $new_key = trim(drupal_substr($var, 0, $cut));
+              $new_var = trim(Unicode::strtolower(Unicode::substr($var, $cut + 1)));
+              $new_key = trim(Unicode::substr($var, 0, $cut));
               unset($vars[$i]);
               $vars[$new_key] = $new_var;
             }
@@ -196,14 +238,14 @@ class SendGridMail implements MailInterface {
           switch ($vars[0]) {
             case 'text/plain':
               // The message includes only a plain text part.
-              $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+              $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($message['body'])));
               break;
 
             case 'text/html':
               // The message includes only an HTML part.
               $sendgrid_message->setHtml($message['body']);
               // Also include a text only version of the email.
-              $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+              $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($message['body'])));
               break;
 
             case 'multipart/related':
@@ -227,7 +269,7 @@ class SendGridMail implements MailInterface {
                   // Clean up the text.
                   $body_part = trim($this->_remove_headers(trim($body_part)));
                   // Include it as part of the mail object.
-                  $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part)));
+                  $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($body_part)));
                 }
                 // If plain/html within the body part, add it to $mailer->Body.
                 elseif (strpos($body_part, 'text/html')) {
@@ -261,7 +303,7 @@ class SendGridMail implements MailInterface {
                     if (strpos($body_part2, 'text/plain')) {
                       // Clean up the text.
                       $body_part2 = trim($this->_remove_headers(trim($body_part2)));
-                      $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part2)));
+                      $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($body_part2)));
                     }
                     // If plain/html within the body part, add it to $mailer->Body.
                     elseif (strpos($body_part2, 'text/html')) {
@@ -270,7 +312,7 @@ class SendGridMail implements MailInterface {
                       // Clean up the text.
                       $body_part2 = trim($this->_remove_headers(trim($body_part2)));
                       // Check whether the encoding is base64, and if so, decode it.
-                      if (drupal_strtolower($body_part2_encoding) == 'base64') {
+                      if (Unicode::strtolower($body_part2_encoding) == 'base64') {
                         // Save the decoded HTML content.
                         $sendgrid_message->setHtml(base64_decode($body_part2));
                       }
@@ -290,7 +332,7 @@ class SendGridMail implements MailInterface {
                     // Clean up the text.
                     $body_part = trim($this->_remove_headers(trim($body_part)));
                     // Set the text message.
-                    $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($body_part)));
+                    $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($body_part)));
                   }
                   // If text/html within the body part, add it to $mailer->Body.
                   elseif (strpos($body_part, 'text/html')) {
@@ -306,9 +348,9 @@ class SendGridMail implements MailInterface {
             default:
               // Everything else is unknown so we log and send the message as text.
               drupal_set_message(t('The %header of your message is not supported by SendGrid and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"]), 'error');
-              watchdog('sendgrid_integration', 'The %header of your message is not supported by PHPMailer and will be sent as text/plain instead.', ['%header' => "Content-Type: $value"], WATCHDOG_ERROR);
+              $this->logger->error("The Content-Type: $value of your message is not supported by PHPMailer and will be sent as text/plain instead.");
               // Force the email to be text.
-              $sendgrid_message->setText(drupal_wrap_mail(drupal_html_to_text($message['body'])));
+              $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($message['body'])));
           }
           break;
 
@@ -318,11 +360,11 @@ class SendGridMail implements MailInterface {
       }
 
       // Handle latter case issue for cc and bcc key
-      if (in_array(drupal_strtolower($key), $cc_bcc_keys)) {
+      if (in_array(Unicode::strtolower($key), $cc_bcc_keys)) {
         $mail_ids = explode(',', $value);
         foreach ($mail_ids as $mail_id) {
-          list($mail_cc_address, $cc_name) = sendgrid_integration_parse_address($mail_id);
-          $address_cc_bcc[drupal_strtolower($key)][] = [
+          list($mail_cc_address, $cc_name) = $this->parseAddress($mail_id);
+          $address_cc_bcc[Unicode::strtolower($key)][] = [
             'mail' => $mail_cc_address,
             'name' => $cc_name,
           ];
@@ -356,148 +398,15 @@ class SendGridMail implements MailInterface {
     if (!empty($attachments)) {
       $sendgrid_message->setAttachments($attachments);
     }
-    // Integration with the Maillog module to use for debugging.
-    if (module_exists('maillog')) {
-      if (variable_get('sendgrid_integration_maillog_log', TRUE)) {
-        $record = new stdClass;
-
-        $record->header_message_id = isset($message->MessageID) ? $message->MessageID : NULL;
-        $record->subject = $sendgrid_message->getSubject();
-        $record->header_from = $sendgrid_message->getFrom();
-        // This returns an array of emails so we have to make a string.
-        $record->header_to = implode(',', $sendgrid_message->getTos());
-        $record->header_reply_to = $sendgrid_message->getReplyTo();
-        $record->header_all = serialize($message['headers']);
-        $record->sent_date = REQUEST_TIME;
-
-        // Used to separate different portions of the body string.
-        $divider = str_repeat('-', 120) . "\n";
-        // Initialize object
-        $record->body = '';
-        // Load the attachments.
-        $attachments = $sendgrid_message->getAttachments();
-        $toaddresses = $sendgrid_message->getTos();
-        $toaddressesnames = $sendgrid_message->getToNames();
-        $record->body .= 'Addressing Information' . "\n";
-        $i = 0;
-        foreach ($toaddresses as $item) {
-          $record->body .= 'To Address ' . $i . ' : ' . $item . "\n";
-          $i++;
-        }
-        $i = 0;
-        foreach ($toaddressesnames as $item) {
-          $record->body .= 'To Address Names ' . $i . ' : ' . $item . "\n";
-          $i++;
-        }
-        $record->body .= $divider;
-        $record->body .= $divider;
-        $fromaddresses = $sendgrid_message->getFrom(TRUE);
-        if (is_array($fromaddresses)) {
-          $i = 0;
-          foreach ($fromaddresses as $key => $value) {
-            $record->body .= 'From Address ' . $i . ' : ' . $key . "\n";
-            $record->body .= 'From Names ' . $i . ' : ' . $value . "\n";
-            $record->body .= $divider;
-            $record->body .= $divider;
-          }
-        }
-        else {
-          $record->body .= 'From Address: ' . $fromaddresses . "\n";
-          $record->body .= $divider;
-          $record->body .= $divider;
-        }
-
-        if (!empty($filters = $sendgrid_message->smtpapi->getFilters())) {
-          $record->body .= 'Filters:' . "\n";
-          foreach ($filters as $item) {
-            $record->body .= print_r($item) . "\n";
-          }
-          $record->body .= $divider;
-          $record->body .= $divider;
-        }
-        else {
-          $record->body .= 'No Filters Declared.' . "\n";
-          $record->body .= $divider;
-          $record->body .= $divider;
-        }
-
-
-        $record->body .= 'Raw Message' . "\n";
-        $record->body .= $divider;
-        $record->body .= $message['body'];
-        $record->body .= $divider;
-        $record->body .= $divider;
-
-        // Check Content-Type of message body and get the appropriate content.
-        if (!empty($sendgrid_message->getHtml())) {
-          $record->body .= 'Body HTML' . "\n";
-          $record->body .= $divider;
-          $record->body .= $sendgrid_message->getHtml() . "\n";
-          $record->body .= $divider;
-          $record->body .= $divider;
-        }
-        if (!empty($sendgrid_message->getText())) {
-          // Message body is text/plain.
-          $record->body .= 'Body Plain Text' . "\n";
-          $record->body .= $divider;
-          $record->body .= $sendgrid_message->getText() . "\n";
-          $record->body .= $divider;
-          $record->body .= $divider;
-        }
-
-        // List the attachments.
-        if (!empty($attachments)) {
-
-          $record->body .= t('Attachments') . ":\n";
-          $record->body .= $divider;
-          foreach ($attachments as $file) {
-            $record->body .= t('Filename') . ':' . $file['filename'] . "\n";
-            $record->body .= t('Directory Name') . ':' . $file['dirname'] . "\n";
-            $record->body .= t('Extension') . ':' . $file['extension'] . "\n";
-            $record->body .= t('Basename') . ':' . $file['basename'] . "\n";
-            $record->body .= "\n";
-          }
-          $record->body .= $divider;
-          $record->body .= $divider;
-        }
-        drupal_write_record('maillog', $record);
-      }
-
-      // Display the e-mail using Devel module.
-      if (variable_get('sendgrid_integration_maillog_devel', TRUE) && function_exists('dpm')) {
-        $bodydevel = '';
-        // Check Content-Type of message body and get the appropriate content.
-        if (!empty($sendgrid_message->getHtml())) {
-          $bodydevel .= 'Body HTML' . "\n" . $divider . "\n" . $sendgrid_message->getHtml() . $divider;
-        }
-        elseif (!empty($sendgrid_message->getText())) {
-          $bodydevel .= 'Body Plain Text' . "\n" . $divider . "\n" . $sendgrid_message->getText() . $divider;
-        }
-        $devel_msg = [];
-        $devel_msg[t('Subject')] = $sendgrid_message->getSubject();
-        $devel_msg[t('From')] = $sendgrid_message->getFrom();
-        $devel_msg[t('To')] = implode(',', $sendgrid_message->getTos());
-        $devel_msg[t('Reply-To')] = !empty($sendgrid_message->getReplyTo()) ? $sendgrid_message->getReplyTo() : NULL;
-        $devel_msg[t('Headers')] = $sendgrid_message->getHeaders();
-        $devel_msg[t('Body')] = $bodydevel;
-        $devel_msg[t('Attachments')] = $sendgrid_message->getAttachments();
-        $devel_msg[t('Message ID')] = $message['id'];
-
-        dpm($devel_msg, 'maillog');
-      }
-    }
-
 
     // Lets try and send the message and catch the error.
     try {
       $response = $sendgrid->send($sendgrid_message);
     }
     catch (\SendGrid\Exception $e) {
-      $error_code = filter_xss($e->getCode());
-      watchdog('SendGrid Integration', 'Sending emails to Sengrind service failed with error code @error_code', ['@error_code' => $error_code], WATCHDOG_ERROR, $link = NULL);
-      foreach ($e->getErrors() as $er) {
-        $error_info = filter_xss($er);
-        watchdog('SendGrid Integration', 'Sendgrid generated error @error_info', ['@error_info' => $error_info], NULL, WATCHDOG_ERROR, $link = NULL);
+      $this->logger->error('Sending emails to Sengrind service failed with error code ' . $e->getCode());
+      foreach ($e->getErrors() as $error_info) {
+        $this->logger->error('Sendgrid generated error ' . $error_info);
       }
       // Add message to queue if reason for failing was timeout or
       // another valid reason. This adds more error tolerance.
@@ -510,18 +419,17 @@ class SendGridMail implements MailInterface {
         503,
         504,
       ];
-      if (in_array($error_code, $codes)) {
+      if (in_array($e->getCode(), $codes)) {
         $queue = DrupalQueue::get('SendGridResendQueue')->createItem($message);
       }
       return FALSE;
     }
     // Sanitize and store the response code for easy processing.
-    $response_code = filter_xss($response->getCode());
 
     // Creating hook, allowing other modules react on sent email.
-    module_invoke_all('sendgrid_integration_sent', $message['to'], $response_code, $unique_args, $response);
+    $this->moduleHandler->invokeAll('sendgrid_integration_sent', [$message['to'], $unique_args, $response]);
 
-    if ($response_code = 200) {
+    if ($response->getCode() == 200) {
       // If the code is 200 we are good to finish and proceed.
       return TRUE;
     }
@@ -553,11 +461,11 @@ class SendGridMail implements MailInterface {
     $search_start = strpos($source, $target) + 1;
     $first_character = strpos($source, $beginning_character, $search_start) + 1;
     $second_character = strpos($source, $ending_character, $first_character) + 1;
-    $substring = drupal_substr($source, $first_character, $second_character - $first_character);
-    $string_length = drupal_strlen($substring) - 1;
+    $substring = Unicode::substr($source, $first_character, $second_character - $first_character);
+    $string_length = Unicode::strlen($substring) - 1;
 
     if ($substring[$string_length] == $ending_character) {
-      $substring = drupal_substr($substring, 0, $string_length);
+      $substring = Unicode::substr($substring, 0, $string_length);
     }
 
     return $substring;
@@ -578,7 +486,7 @@ class SendGridMail implements MailInterface {
    */
   protected function _boundary_split($input, $boundary) {
     $parts = [];
-    $bs_possible = drupal_substr($boundary, 2, -2);
+    $bs_possible = Unicode::substr($boundary, 2, -2);
     $bs_check = '\"' . $bs_possible . '\"';
 
     if ($boundary == $bs_check) {
@@ -642,5 +550,17 @@ class SendGridMail implements MailInterface {
     return $output;
   }
 
+
+  /**
+   * Split an email address into it's name and address components.
+   */
+  protected function parseAddress($email) {
+    if (preg_match(self::SENDGRID_INTEGRATION_EMAIL_REGEX, $email, $matches)) {
+      return [$matches[2], $matches[1]];
+    }
+    else {
+      return [$email, ' '];
+    }
+  }
 
 }
