@@ -1,10 +1,49 @@
 <?php
 
+namespace Drupal\sendgrid_integration\Plugin\Mail;
+
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Mail\MailInterface;
+use Drupal\Core\Site\Settings;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 /**
  * @file
  * Implements Drupal MailSystemInterface.
+ *
+ * @Mail(
+ *   id = "php_mail",
+ *   label = @Translation("Default PHP mailer"),
+ *   description = @Translation("Sends the message as plain text, using PHP's native mail() function.")
+ * )
  */
-class SendGridMailSystem implements MailSystemInterface {
+class SendGridMail implements MailInterface {
+
+  /**
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   *
+   * The configuration factory service.
+   */
+  protected $configFactory;
+
+  /**
+   * SendGridMailSystem constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The configuration factory service.
+   */
+  public function __construct(ConfigFactoryInterface $configFactory) {
+    $this->configFactory = $configFactory;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory')
+    );
+  }
 
   /**
    * Email formatting, example strip away html.

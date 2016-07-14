@@ -33,9 +33,3 @@ sendgrid_integration.settings:
         reply_to:
           type: string
           label: 'The reply to address for the test mail.'
-    maillog_log:
-      type: boolean
-      label: 'Whether or not to log mail using maillog module.'
-    maillog_devel:
-      type: string
-      label: 'Whether or not to display mail on the page using devel module.'

@@ -8,5 +8,3 @@ test_defaults:
   from_name: ''
   to_name: ''
   reply_to: ''
-maillog_log: true
-maillog_devel: true

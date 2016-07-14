@@ -85,31 +85,6 @@ class SendGridSettingsForm extends ConfigFormBase {
       '#description' => $this->t('The secret key of your key pair. These are only generated once by Sendgrid. Your existing key is hidden. If you need to change this, provide a new key here.'),
     ];
 
-    $form['debugging']['maillog'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Maillog integration'),
-    ];
-
-    if (!$this->moduleHandler->moduleExists('maillog')) {
-      $form['debugging']['maillog']['#description'] = $this->t('Installing the <a href="@url">Maillog module</a> also allows keeping copies of all emails sent through the site.', ['@url' => 'https://www.drupal.org/project/maillog']);
-    }
-    else {
-      $form['debugging']['maillog']['#description'] = $this->t('The <a href="@url">Maillog module</a> is installed, it can also be used to keep copies of all emails sent through the site.', ['@url' => Url::fromRoute('maillog.settings')->toString()]);
-
-      $form['debugging']['maillog']['sendgrid_integration_maillog_log'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Create table entries in maillog table for each e-mail.'),
-        '#default_value' => $config->get('maillog_log'),
-      ];
-
-      $form['debugging']['maillog']['sendgrid_integration_maillog_devel'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Display the e-mails on page using devel module (if enabled).'),
-        '#default_value' => $config->get('maillog_devel'),
-        '#disabled' => !$this->moduleHandler->moduleExists('devel'),
-      ];
-    }
-
     return parent::buildForm($form, $form_state);
   }
 
@@ -130,13 +105,6 @@ class SendGridSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('sendgrid_integration.settings');
-
-    if ($form_state->hasValue('sendgrid_integration_maillog_log')) {
-      $config->set('maillog_log', $form_state->getValue('sendgrid_integration_maillog_log'));
-    }
-    if ($form_state->hasValue('sendgrid_integration_maillog_devel')) {
-      $config->set('maillog_devel', $form_state->getValue('sendgrid_integration_maillog_devel'));
-    }
 
     if ($form_state->hasValue('sendgrid_integration_apikey') && !empty($form_state->getValue('sendgrid_integration_apikey'))) {
       $config->set('apikey', $form_state->getValue('sendgrid_integration_apikey'));
