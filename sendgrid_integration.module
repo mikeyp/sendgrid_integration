@@ -35,7 +35,7 @@ function sendgrid_integration_mail($key, &$message, $params) {
     $params['body']
   );
   if ($params['include_test_attachment']) {
-    $message['attachments'][] = drupal_realpath('misc/druplicon.png');
+    $message['attachments'][] = drupal_realpath('core/misc/druplicon.png');
   }
   if (isset($params['Reply-To']) && !empty($params['Reply-To'])) {
     $message['headers']['Reply-To'] = $params['Reply-To'];

@@ -1,8 +1,11 @@
 <?php
+
 /**
  * @file
  * Contains install and update functions for SendGrid Integration
  */
+
+use Drupal\mailsystem\MailsystemManager;
 
 /**
  * Implements hook_install().
@@ -11,7 +14,15 @@ function sendgrid_integration_install() {
   $site_settings = \Drupal::config('system.site');
   $config = \Drupal::configFactory()->getEditable('sendgrid_integration.settings');
 
+  // Update defaults for test email.
   $config->set('test_defaults.to', $site_settings->get('mail'));
   $config->set('test_defaults.body.format', filter_fallback_format());
   $config->save();
+
+  // Set the mailsystem for the test email.
+  $mailsystem_config = \Drupal::configFactory()->getEditable('mailsystem.settings');
+  $prefix = MailsystemManager::MAILSYSTEM_MODULES_CONFIG . '.sendgrid_integration.none';
+  $mailsystem_config->set($prefix . '.' . MailsystemManager::MAILSYSTEM_TYPE_FORMATTING, 'sendgrid_integration');
+  $mailsystem_config->set($prefix . '.' . MailsystemManager::MAILSYSTEM_TYPE_SENDING, 'sendgrid_integration');
+  $mailsystem_config->save();
 }

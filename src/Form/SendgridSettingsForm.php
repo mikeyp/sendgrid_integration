@@ -6,11 +6,11 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class SendGridSettingsForm
+ * Class SendGridSettingsForm.
+ *
  * @package Drupal\sendgrid_integration\Form
  */
 class SendGridSettingsForm extends ConfigFormBase {
@@ -89,7 +89,7 @@ class SendGridSettingsForm extends ConfigFormBase {
   }
 
   /**
-   * [@inheritdoc}
+   * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('sendgrid_integration.settings');

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Hooks provided by SendGrid Integration module
+ * Hooks provided by SendGrid Integration module.
  */
 
 /**
@@ -14,27 +14,27 @@
  * This hook is invoked after email has been sent.
  *
  * @param string $to
- *   Address of email recipient
- **
+ *   Address of email recipient.
  * @param array $unique_args
  *   Unique arguments used when email were sent, keyed by argument name.
- *     - id Message id
- *     - uid User id
- *     - module Module witch sent the message
- *
+ *     - id Message id.
+ *     - uid User id.
+ *     - module Module witch sent the message.
  * @param array $response
  *   Response from the SendGrid API.
  */
 function hook_sendgrid_integration_sent($to, $unique_args, $response) {
-  if($unique_args['module'] == 'my_module' && $result_code = 200) {
-    watchdog('My Module', 'My module has successfully sent email', NULL, WATCHDOG_NOTICE, $link = NULL);
+  if ($unique_args['module'] == 'my_module' && $result_code = 200) {
+    \Drupal::logger('My Module')->notice('My module has successfully sent email');
   }
 }
 
 /**
  * This hook is invoked before mail is sent, allowing modification of unique_args.
+ *
  * @param array $unique_args
  *   Unique arguments.
+ *
  * @return array
  *   Returned array will be used as unique arguments.
  */
@@ -46,8 +46,10 @@ function hook_sendgrid_integration_unique_args_alter($unique_args) {
 
 /**
  * This hook is invoked before mail is sent, allowing modification of categories.
+ *
  * @param array $categories
  *   An array of categories for Sendgrid statistics.
+ *
  * @return array
  *   Returned array will be used as categories.
  */

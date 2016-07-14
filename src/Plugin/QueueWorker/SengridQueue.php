@@ -8,6 +8,8 @@ use Drupal\Core\Queue\QueueWorkerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * Sendgrid resend queue worker.
+ *
  * @QueueWorker(
  *   id = "SendGridResendQueue",
  *   title = @Translation("SendGrid Resend queue"),

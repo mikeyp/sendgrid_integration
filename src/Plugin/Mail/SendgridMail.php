@@ -2,6 +2,7 @@
 
 namespace Drupal\sendgrid_integration\Plugin\Mail;
 
+use SendGrid\Exception;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -99,10 +100,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
   }
 
   /**
-   * Email formatting, example strip away html.
-   *
-   * @param array $message
-   * @return array
+   * {@inheritdoc}
    */
   public function format(array $message) {
     // Join message array.
@@ -111,12 +109,8 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
     return $message;
   }
 
-
   /**
-   * Implement mail method to send mail via Sendgrid.
-   *
-   * @param array $message
-   * @return bool
+   * {@inheritdoc}
    */
   public function mail(array $message) {
     $site_config = $this->configFactory->get('system.site');
@@ -185,7 +179,6 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
     // Build the Sendgrid mail object.
     // The message MODULE and ID is used for the Category. Category is the only
     // thing in the Sendgrid UI you can use to sort mail.
-
     // This is an array of categories for Sendgrid statistics.
     $categories = [
       $sitename,
@@ -225,7 +218,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
       }
     }
 
-    //Add cc and bcc in mail if they exist.
+    // Add cc and bcc in mail if they exist.
     $cc_bcc_keys = ['cc', 'bcc'];
     $address_cc_bcc = [];
 
@@ -234,7 +227,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
       switch (Unicode::strtolower($key)) {
         case 'content-type':
           // Parse several values on the Content-type header, storing them in an array like
-          // key=value -> $vars['key']='value'
+          // key=value -> $vars['key']='value'.
           $vars = explode(';', $value);
           foreach ($vars as $i => $var) {
             if ($cut = strpos($var, '=')) {
@@ -244,7 +237,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
               $vars[$new_key] = $new_var;
             }
           }
-          // If $vars is empty then set an empty value at index 0 to avoid a PHP warning in the next statement
+          // If $vars is empty then set an empty value at index 0 to avoid a PHP warning in the next statement.
           $vars[0] = isset($vars[0]) ? $vars[0] : '';
           // Nested switch to process the various content types. We only care
           // about the first entry in the array.
@@ -264,30 +257,29 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
             case 'multipart/related':
               // @todo determine how to handle this content type.
               // Get the boundary ID from the Content-Type header.
-              $boundary = $this->_get_substring($message['body'], 'boundary', '"', '"');
+              $boundary = $this->getSubString($message['body'], 'boundary', '"', '"');
 
               break;
 
             case 'multipart/alternative':
               // Get the boundary ID from the Content-Type header.
-              $boundary = $this->_get_substring($message['body'], 'boundary', '"', '"');
+              $boundary = $this->getSubString($message['body'], 'boundary', '"', '"');
 
-              // Parse text and HTML portions
-
+              // Parse text and HTML portions.
               // Split the body based on the boundary ID.
-              $body_parts = $this->_boundary_split($message['body'], $boundary);
+              $body_parts = $this->boundrySplit($message['body'], $boundary);
               foreach ($body_parts as $body_part) {
                 // If plain/text within the body part, add it to $mailer->AltBody.
                 if (strpos($body_part, 'text/plain')) {
                   // Clean up the text.
-                  $body_part = trim($this->_remove_headers(trim($body_part)));
+                  $body_part = trim($this->removeHeaders(trim($body_part)));
                   // Include it as part of the mail object.
                   $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($body_part)));
                 }
                 // If plain/html within the body part, add it to $mailer->Body.
                 elseif (strpos($body_part, 'text/html')) {
                   // Clean up the text.
-                  $body_part = trim($this->_remove_headers(trim($body_part)));
+                  $body_part = trim($this->removeHeaders(trim($body_part)));
                   // Include it as part of the mail object.
                   $sendgrid_message->setHtml($body_part);
                 }
@@ -296,34 +288,34 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
 
             case 'multipart/mixed':
               // Get the boundary ID from the Content-Type header.
-              $boundary = $this->_get_substring($value, 'boundary', '"', '"');
+              $boundary = $this->getSubString($value, 'boundary', '"', '"');
               // Split the body based on the boundary ID.
-              $body_parts = $this->_boundary_split($message['body'], $boundary);
+              $body_parts = $this->boundrySplit($message['body'], $boundary);
 
-              // Parse text and HTML portions
+              // Parse text and HTML portions.
               foreach ($body_parts as $body_part) {
                 if (strpos($body_part, 'multipart/alternative')) {
                   // Get the second boundary ID from the Content-Type header.
-                  $boundary2 = $this->_get_substring($body_part, 'boundary', '"', '"');
+                  $boundary2 = $this->getSubString($body_part, 'boundary', '"', '"');
                   // Clean up the text.
-                  $body_part = trim($this->_remove_headers(trim($body_part)));
+                  $body_part = trim($this->removeHeaders(trim($body_part)));
                   // Split the body based on the internal boundary ID.
-                  $body_parts2 = $this->_boundary_split($body_part, $boundary2);
+                  $body_parts2 = $this->boundrySplit($body_part, $boundary2);
 
                   // Process the internal parts.
                   foreach ($body_parts2 as $body_part2) {
                     // If plain/text within the body part, add it to $mailer->AltBody.
                     if (strpos($body_part2, 'text/plain')) {
                       // Clean up the text.
-                      $body_part2 = trim($this->_remove_headers(trim($body_part2)));
+                      $body_part2 = trim($this->removeHeaders(trim($body_part2)));
                       $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($body_part2)));
                     }
                     // If plain/html within the body part, add it to $mailer->Body.
                     elseif (strpos($body_part2, 'text/html')) {
                       // Get the encoding.
-                      $body_part2_encoding = trim($this->_get_substring($body_part2, 'Content-Transfer-Encoding', ':', "\n"));
+                      $body_part2_encoding = trim($this->getSubString($body_part2, 'Content-Transfer-Encoding', ':', "\n"));
                       // Clean up the text.
-                      $body_part2 = trim($this->_remove_headers(trim($body_part2)));
+                      $body_part2 = trim($this->removeHeaders(trim($body_part2)));
                       // Check whether the encoding is base64, and if so, decode it.
                       if (Unicode::strtolower($body_part2_encoding) == 'base64') {
                         // Save the decoded HTML content.
@@ -339,18 +331,17 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
                 else {
                   // This parses the message if there is no internal content
                   // type set after the multipart/mixed.
-
                   // If text/plain within the body part, add it to $mailer->Body.
                   if (strpos($body_part, 'text/plain')) {
                     // Clean up the text.
-                    $body_part = trim($this->_remove_headers(trim($body_part)));
+                    $body_part = trim($this->removeHeaders(trim($body_part)));
                     // Set the text message.
                     $sendgrid_message->setText(MailFormatHelper::wrapMail(MailFormatHelper::htmlToText($body_part)));
                   }
                   // If text/html within the body part, add it to $mailer->Body.
                   elseif (strpos($body_part, 'text/html')) {
                     // Clean up the text.
-                    $body_part = trim($this->_remove_headers(trim($body_part)));
+                    $body_part = trim($this->removeHeaders(trim($body_part)));
                     // Set the HTML message.
                     $sendgrid_message->setHtml($body_part);
                   }
@@ -372,7 +363,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
           break;
       }
 
-      // Handle latter case issue for cc and bcc key
+      // Handle latter case issue for cc and bcc key.
       if (in_array(Unicode::strtolower($key), $cc_bcc_keys)) {
         $mail_ids = explode(',', $value);
         foreach ($mail_ids as $mail_id) {
@@ -416,7 +407,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
     try {
       $response = $sendgrid->send($sendgrid_message);
     }
-    catch (\SendGrid\Exception $e) {
+    catch (Exception $e) {
       $this->logger->error('Sending emails to Sengrind service failed with error code ' . $e->getCode());
       foreach ($e->getErrors() as $error_info) {
         $this->logger->error('Sendgrid generated error ' . $error_info);
@@ -437,10 +428,9 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
       }
       return FALSE;
     }
-    // Sanitize and store the response code for easy processing.
-
     // Creating hook, allowing other modules react on sent email.
-    $this->moduleHandler->invokeAll('sendgrid_integration_sent', [$message['to'], $unique_args, $response]);
+    $hook_args = [$message['to'], $unique_args, $response];
+    $this->moduleHandler->invokeAll('sendgrid_integration_sent', $hook_args);
 
     if ($response->getCode() == 200) {
       // If the code is 200 we are good to finish and proceed.
@@ -458,19 +448,20 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
    *
    * Swiped from SMTP module. Thanks!
    *
-   * @param $source
+   * @param string $source
    *   A string containing the text to look through.
-   * @param $target
+   * @param string $target
    *   A string containing the text in $source to start looking from.
-   * @param $beginning_character
+   * @param string $beginning_character
    *   A string containing the character just before the sought after text.
-   * @param $ending_character
+   * @param string $ending_character
    *   A string containing the character just after the sought after text.
+   *
    * @return string
    *   A string with the text found between the $beginning_character and the
    *   $ending_character.
    */
-  protected function _get_substring($source, $target, $beginning_character, $ending_character) {
+  protected function getSubString($source, $target, $beginning_character, $ending_character) {
     $search_start = strpos($source, $target) + 1;
     $first_character = strpos($source, $beginning_character, $search_start) + 1;
     $second_character = strpos($source, $ending_character, $first_character) + 1;
@@ -490,14 +481,15 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
    * Swiped from Mail::MimeDecode, with modifications based on Drupal's coding
    * standards and this bug report: http://pear.php.net/bugs/bug.php?id=6495
    *
-   * @param input
+   * @param string $input
    *   A string containing the body text to parse.
-   * @param boundary
+   * @param string $boundary
    *   A string with the boundary string to parse on.
+   *
    * @return array
    *   An array containing the resulting mime parts
    */
-  protected function _boundary_split($input, $boundary) {
+  protected function boundrySplit($input, $boundary) {
     $parts = [];
     $bs_possible = Unicode::substr($boundary, 2, -2);
     $bs_check = '\"' . $bs_possible . '\"';
@@ -522,13 +514,14 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
    *
    * @param string $input
    *   A string containing the body part to strip.
+   *
    * @return string
    *   A string with the stripped body part.
    */
-  protected function _remove_headers($input) {
+  protected function removeHeaders($input) {
     $part_array = explode("\n", $input);
 
-    // will strip these headers according to RFC2045
+    // Will strip these headers according to RFC2045.
     $headers_to_strip = [
       'Content-Type',
       'Content-Transfer-Encoding',
@@ -539,22 +532,21 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
 
     while (count($part_array) > 0) {
 
-      // ignore trailing spaces/newlines
+      // Ignore trailing spaces/newlines.
       $line = rtrim($part_array[0]);
 
-      // if the line starts with a known header string
+      // If the line starts with a known header string.
       if (preg_match($pattern, $line)) {
         $line = rtrim(array_shift($part_array));
-        // remove line containing matched header.
-
-        // if line ends in a ';' and the next line starts with four spaces, it's a continuation
+        // Remove line containing matched header.
+        // If line ends in a ';' and the next line starts with four spaces, it's a continuation
         // of the header split onto the next line. Continue removing lines while we have this condition.
         while (substr($line, -1) == ';' && count($part_array) > 0 && substr($part_array[0], 0, 4) == '    ') {
           $line = rtrim(array_shift($part_array));
         }
       }
       else {
-        // no match header, must be past headers; stop searching.
+        // No match header, must be past headers; stop searching.
         break;
       }
     }
@@ -562,7 +554,6 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
     $output = implode("\n", $part_array);
     return $output;
   }
-
 
   /**
    * Split an email address into it's name and address components.

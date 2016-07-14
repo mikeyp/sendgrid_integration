@@ -9,22 +9,23 @@ use Drupal\Core\Mail\MailManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class SendGridSettingsForm
+ * Class SendGridSettingsForm.
+ *
  * @package Drupal\sendgrid_integration\Form
  */
 class SendGridTestForm extends FormBase {
 
   /**
-   * @var \Drupal\Core\Mail\MailManagerInterface
-   *
    * The mail manager service.
+   *
+   * @var \Drupal\Core\Mail\MailManagerInterface
    */
   protected $mailManager;
 
   /**
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   *
    * The language manager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
   protected $languageManager;
 
@@ -136,11 +137,7 @@ class SendGridTestForm extends FormBase {
     $params = $config->get('test_defaults');
 
     $params['include_test_attachment'] = $form_state->getValue('include_attachment');
-
     $params['body'] = check_markup($params['body']['value'], $params['body']['format']);
-
-//    // Setting a specific mail system for the SendGrid Integration Module.
-//    mailsystem_set(['sendgrid_integration' => 'SendGridMailSystem']);
 
     // Attempt to send the email and post a message if it was successful.
     if ($config->get('test_defaults.from_name')) {
@@ -156,6 +153,6 @@ class SendGridTestForm extends FormBase {
         '%to' => $config->get('test_deftauls.to'),
       ]));
     }
-
   }
+
 }
