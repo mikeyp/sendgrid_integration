@@ -12,6 +12,7 @@ use Drupal\Core\Mail\MailInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueFactory;
 use SendGrid\Email;
+use SendGrid\Client;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -131,7 +132,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
       'raise_exceptions' => FALSE,
     ];
     // Create a new SendGrid object.
-    $sendgrid = new \SendGrid($key_secret, $options);
+    $client = new Client($key_secret, $options);
     $sendgrid_message = new Email();
     $sitename = $site_config->get('name');
     // Defining default unique args.
@@ -359,7 +360,9 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
           break;
 
         case 'reply-to':
-          $sendgrid_message->setReplyTo($message['headers']['Reply-To']);
+          if (isset($message['headers']['Reply-To'])) {
+            $sendgrid_message->setReplyTo($message['headers']['Reply-To']);
+          }
           break;
       }
 
@@ -405,7 +408,7 @@ class SendGridMail implements MailInterface, ContainerFactoryPluginInterface {
 
     // Lets try and send the message and catch the error.
     try {
-      $response = $sendgrid->send($sendgrid_message);
+      $response = $client->send($sendgrid_message);
     }
     catch (Exception $e) {
       $this->logger->error('Sending emails to Sengrind service failed with error code ' . $e->getCode());

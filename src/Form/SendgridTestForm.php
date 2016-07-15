@@ -150,7 +150,7 @@ class SendGridTestForm extends FormBase {
     if (isset($result['result']) && $result['result'] == TRUE) {
       drupal_set_message($this->t('SendGrid test email sent from %from to %to.', [
         '%from' => $from,
-        '%to' => $config->get('test_deftauls.to'),
+        '%to' => $config->get('test_defaults.to'),
       ]));
     }
   }
